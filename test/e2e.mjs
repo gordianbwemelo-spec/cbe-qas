@@ -75,24 +75,27 @@ await step('set-up details persist to the server', async () => {
 await step('evidence sheet saves and auto-flags', async () => {
   await mgr.click('[data-go="A"]'); await mgr.waitForTimeout(500);
   await mgr.evaluate(async () => {
-    ingestRows('g_mod', [
-      ['BAM 05201', 'Business Finance', '8', 'BAF', '120', 'Yes', '30', 'Dr. J. Mushi', 'PhD', ''],
-      ['ACC 05203', 'Financial Accounting', '8', 'BAC', '98', 'Yes', '12', 'Dr. J. Mushi', 'PhD', ''],
-      ['PSC 05104', 'Procurement Principles', '7', 'BPS', '76', 'No', '0', '', '', ''],
-      ['ICT 06110', 'Database Systems', '9', 'MSc ICT', '22', 'Yes', '3', 'Mr. A. Kimaro', 'Lecturer by publication', ''],
-      ['MKT 05220', 'Marketing Research', '8', 'BMK', '150', 'Yes', '40', 'Prof. L. Mbise', 'PhD', '']
+    /* exceptions only — nothing that met the standard is recorded */
+    ingestRows('g_notmod', [
+      ['PSC 05104', 'Procurement Principles', '7', 'BPS', 'Procurement', '76', 'Moderator not appointed', '']
     ]);
-    ingestRows('g_modwl', [
-      ['Dr. J. Mushi', 'CBE DSM', 'PhD', 'Finance', '24', 'No', 'Yes'],
-      ['Mr. A. Kimaro', 'UDOM', 'Lecturer by publication', 'ICT', '6', 'Yes', 'Yes']
+    ingestRows('g_lowsample', [
+      ['ACC 05203', 'Financial Accounting', '98', '12', 'Dr. J. Mushi', ''],
+      ['ICT 06110', 'Database Systems', '22', '3', 'Mr. A. Kimaro', '']
     ]);
-    saveGrid('g_mod'); saveGrid('g_modwl');
+    ingestRows('g_modload', [
+      ['Dr. J. Mushi', 'CBE DSM', '24', '']
+    ]);
+    ingestRows('g_modqual', [
+      ['Mr. A. Kimaro', 'Lecturer by publication', 'ICT', 'ICT 06110 Database Systems', 'Yes', 'Partly', '']
+    ]);
+    saveGrid('g_notmod'); saveGrid('g_lowsample'); saveGrid('g_modload'); saveGrid('g_modqual');
     await new Promise(r => setTimeout(r, 1500));
     render();
   });
   await mgr.waitForTimeout(1200);
-  const n = Number(psql("select jsonb_array_length(rows) from audit_grids where grid_id='g_mod'"));
-  if (n !== 5) throw new Error('grid not persisted: ' + n);
+  const n = Number(psql("select jsonb_array_length(rows) from audit_grids where grid_id='g_lowsample'"));
+  if (n !== 2) throw new Error('grid not persisted: ' + n);
   const d = await mgr.evaluate(() => ({ a1: runDerive(itemDef('A1').item).suggest,
     a2: runDerive(itemDef('A2').item).suggest, a3: runDerive(itemDef('A3').item).suggest }));
   if (d.a1 !== 'NC' || d.a2 !== 'NC' || d.a3 !== 'NC') throw new Error('flags wrong: ' + JSON.stringify(d));
@@ -105,7 +108,8 @@ await step('apply suggestion writes a status and issue to the server', async () 
   const st = psql("select data->>'status' from audit_items where item_id='A1'");
   const iss = psql("select data->>'issue' from audit_items where item_id='A1'");
   if (st !== 'NC') throw new Error('status not saved: ' + st);
-  if (!/module was not moderated/i.test(iss)) throw new Error('issue not drafted: ' + iss);
+  if (!/not moderated/i.test(iss)) throw new Error('issue not drafted: ' + iss);
+  if (!/Procurement Principles/.test(iss)) throw new Error('affected module not named in the issue: ' + iss);
 });
 await step('branching shows only the fields the status needs', async () => {
   if (!(await mgr.locator('#it_A1 [data-s="items.A1.issue"]').count())) throw new Error('issue field missing on NC');
@@ -158,7 +162,7 @@ await step('fill the remaining findings', async () => {
     rec('A12').status = 'NV'; rec('A12').nv = 'The printing register for August 2026 was not availed.'; saveItem('A12');
     ingestRows('g_curr', [
       ['MBA Finance and Banking', '9', '2018', '2023', 'Expired', ''],
-      ['Bachelor of Accountancy', '8', '2022', '2027', 'Valid', '']
+      ['Bachelor of Accountancy', '8', '2022', '2027', 'Under review', '']
     ]);
     ingestRows('g_wl', [['Hassan Issa Millas', 'Accountancy', '7', '34', '26', '']]);
     saveGrid('g_curr'); saveGrid('g_wl');
@@ -168,8 +172,8 @@ await step('fill the remaining findings', async () => {
       r.responsible = itemDef(id).item.responsible; r.severity = sev.H; saveItem(id);
     }
     ingestRows('g_rooms', [
-      ['B1-7', 'Classroom', '60', '60', 'Absent', 'Absent', 'Absent', 'Good', 'Not required', 'Adequate', 'Adequate', 'Good', ''],
-      ['T2', 'Lecture theatre', '120', '108', 'Faulty', 'Functional', 'Available', 'Worn', 'Faulty', 'Inadequate', 'Faulty', 'Fair', '']
+      ['B1-7', 'Classroom', '60', '60', 'Absent', 'Absent', 'Absent', '', '', '', '', '', ''],
+      ['T2', 'Lecture theatre', '120', '108', 'Faulty', '', '', 'Worn', 'Faulty', 'Inadequate', 'Faulty', 'Fair', '']
     ]);
     saveGrid('g_rooms');
     const d1 = runDerive(itemDef('D1').item);

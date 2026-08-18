@@ -89,22 +89,19 @@ const FRAMEWORK = [
       standard:'100% of examined modules must be moderated.',
       evidence:'Post-moderation reports; moderation register; list of modules examined.',
       responsible:'Director of Academic Support Services (DASS)',
-      grid:{ id:'g_mod', title:'Module moderation register',
+      grid:{ id:'g_notmod', title:'Modules not moderated', exceptions:true,
         cols:[
-          {k:'code',   label:'Module code',      type:'text',   w:110},
-          {k:'name',   label:'Module name',      type:'text',   w:200},
-          {k:'nta',    label:'NTA level',        type:'select', options:['4','5','6','7','8','9'], w:80},
-          {k:'prog',   label:'Programme',        type:'text',   w:150},
-          {k:'cand',   label:'Candidates',       type:'number', w:90},
-          {k:'moder',  label:'Moderated?',       type:'select', options:['Yes','No'], w:100},
-          {k:'scripts',label:'Scripts moderated',type:'number', w:110},
-          {k:'modname',label:'Moderator',        type:'text',   w:160},
-          {k:'modqual',label:'Moderator qualification', type:'select', options:['PhD','Masters','Lecturer by publication','Other'], w:150},
-          {k:'remark', label:'Remarks',          type:'text',   w:180}
-        ], derive:'deriveModeration' },
+          {k:'code',   label:'Module code',   type:'text',   w:120},
+          {k:'name',   label:'Module name',   type:'text',   w:210},
+          {k:'nta',    label:'NTA level',     type:'select', options:['4','5','6','7','8','9'], w:90},
+          {k:'prog',   label:'Programme',     type:'text',   w:150},
+          {k:'dept',   label:'Department',    type:'text',   w:160},
+          {k:'cand',   label:'Candidates',    type:'number', w:100},
+          {k:'reason', label:'Reason given',  type:'text',   w:200},
+          {k:'remark', label:'Remarks',       type:'text',   w:170}
+        ], derive:'deriveNotModerated' },
       probes:[
-        {k:'totalExamined', label:'Total modules examined in Semester II', type:'number', showIf:'always'},
-        {k:'modSource',     label:'Source of the moderation record', type:'select',
+        {k:'modSource', label:'Source of the moderation record', type:'select',
           options:['Post-moderation reports','Moderation register','COSIS extract','Departmental records','Combination'], showIf:'always'}
       ]},
 
@@ -113,22 +110,27 @@ const FRAMEWORK = [
       standard:'Minimum 20% of scripts per module must be moderated.',
       evidence:'Moderation sample sheets; candidate registers.',
       responsible:'Director of Academic Support Services (DASS)',
-      usesGrid:'g_mod', deriveOnly:'deriveSample' },
+      grid:{ id:'g_lowsample', title:'Modules moderated below the required sample threshold', exceptions:true,
+        cols:[
+          {k:'code',    label:'Module code',        type:'text',   w:120},
+          {k:'name',    label:'Module name',        type:'text',   w:210},
+          {k:'cand',    label:'Candidates',         type:'number', w:110},
+          {k:'scripts', label:'Scripts moderated',  type:'number', w:140},
+          {k:'modname', label:'Moderator',          type:'text',   w:180},
+          {k:'remark',  label:'Remarks',            type:'text',   w:180}
+        ], derive:'deriveSample' } },
 
     { id:'A3', title:'Manageability of moderator workload',
       approach:'Review moderator allocation lists against the acceptable workload ceiling and report moderators carrying excessive numbers of modules.',
       standard:'No moderator should exceed 20 modules per moderation cycle.',
       evidence:'Moderator allocation list; appointment letters.',
       responsible:'Director of Academics (DAC)',
-      grid:{ id:'g_modwl', title:'Moderator workload',
+      grid:{ id:'g_modload', title:'Moderators exceeding the module ceiling', exceptions:true,
         cols:[
-          {k:'name',   label:'Moderator',            type:'text',   w:190},
-          {k:'inst',   label:'Institution / Dept',   type:'text',   w:170},
-          {k:'qual',   label:'Highest qualification',type:'select', options:['PhD','Masters','Lecturer by publication','Other'], w:160},
-          {k:'spec',   label:'Area of specialisation',type:'text',  w:190},
-          {k:'nmod',   label:'Modules moderated',    type:'number', w:130},
-          {k:'nta9',   label:'Moderated NTA 9 modules?', type:'select', options:['Yes','No'], w:150},
-          {k:'align',  label:'Specialisation aligned?', type:'select', options:['Yes','No','Partly'], w:150}
+          {k:'name',   label:'Moderator',                 type:'text',   w:200},
+          {k:'inst',   label:'Institution / Department',  type:'text',   w:190},
+          {k:'nmod',   label:'Modules moderated',         type:'number', w:150},
+          {k:'remark', label:'Remarks',                   type:'text',   w:210}
         ], derive:'deriveModeratorLoad' } },
 
     { id:'A4', title:'Alignment of moderator qualifications and specialisation with allocated modules',
@@ -136,32 +138,44 @@ const FRAMEWORK = [
       standard:'Moderator specialisation must match the module; NTA Level 9 modules require a PhD holder.',
       evidence:"Moderators' CVs; module allocation records.",
       responsible:'Director of Academics (DAC)',
-      usesGrid:'g_modwl', deriveOnly:'deriveModeratorQual' },
+      grid:{ id:'g_modqual', title:'Moderator qualification and specialisation exceptions', exceptions:true,
+        cols:[
+          {k:'name',  label:'Moderator',                type:'text',   w:180},
+          {k:'qual',  label:'Highest qualification',    type:'select', options:['Masters','Lecturer by publication','Bachelor','Other'], w:180},
+          {k:'spec',  label:'Area of specialisation',   type:'text',   w:180},
+          {k:'mods',  label:'Modules allocated',        type:'text',   w:220},
+          {k:'nta9',  label:'Moderated NTA 9 modules?', type:'select', options:['Yes','No'], w:160},
+          {k:'align', label:'Specialisation aligned?',  type:'select', options:['No','Partly'], w:160},
+          {k:'remark',label:'Remarks',                  type:'text',   w:180}
+        ], derive:'deriveModeratorQual' } },
 
     { id:'A5', title:'Signing of mark sheets by internal and external examiners',
       approach:'Verify that all mark sheets were signed by the responsible internal and external examiners on every page.',
       standard:'All mark sheets signed by both internal and external examiners.',
       evidence:'Signed mark sheets (sampled at not less than 40%).',
       responsible:'Head of Department (HoD)',
-      probes:[
-        {k:'sheetsChecked', label:'Mark sheets checked', type:'number', showIf:'always'},
-        {k:'sheetsSigned',  label:'Mark sheets fully signed', type:'number', showIf:'always'},
-        {k:'unsignedList',  label:'Modules with unsigned mark sheets', type:'textarea', showIf:'issue'}
-      ]},
+      grid:{ id:'g_unsigned', title:'Mark sheets not fully signed', exceptions:true,
+        cols:[
+          {k:'code',    label:'Module code',        type:'text',   w:120},
+          {k:'name',    label:'Module name',        type:'text',   w:220},
+          {k:'dept',    label:'Department',         type:'text',   w:170},
+          {k:'missing', label:'Signature missing',  type:'select', options:['Internal examiner','External examiner','Both'], w:180},
+          {k:'remark',  label:'Remarks',            type:'text',   w:200}
+        ], derive:'deriveUnsigned' } },
 
     { id:'A6', title:"Incorporation and uploading of external examiners' scores into COSIS",
       approach:"Compare COSIS records, external examination reports and mark sheets to confirm that all external examiners' scores were incorporated and uploaded.",
       standard:"100% of externally examined modules and students reflected in COSIS.",
       evidence:'COSIS extract; external examiner reports; mark sheets.',
       responsible:'Head of Department (HoD)',
-      grid:{ id:'g_ext', title:"Outstanding external examiners' scores",
+      grid:{ id:'g_ext', title:"Modules with external examiners' scores not incorporated", exceptions:true,
         cols:[
-          {k:'code',  label:'Module code',   type:'text',   w:120},
-          {k:'name',  label:'Module name',   type:'text',   w:220},
-          {k:'dept',  label:'Department',    type:'text',   w:160},
-          {k:'nstud', label:'Students affected', type:'number', w:140},
-          {k:'inc',   label:'Incorporated?', type:'select', options:['Yes','No','Partly'], w:130},
-          {k:'remark',label:'Remarks',       type:'text',   w:200}
+          {k:'code',  label:'Module code',       type:'text',   w:120},
+          {k:'name',  label:'Module name',       type:'text',   w:220},
+          {k:'dept',  label:'Department',        type:'text',   w:170},
+          {k:'nstud', label:'Students affected', type:'number', w:150},
+          {k:'inc',   label:'Status',            type:'select', options:['Not incorporated','Partly incorporated'], w:180},
+          {k:'remark',label:'Remarks',           type:'text',   w:200}
         ], derive:'deriveExternal' } },
 
     { id:'A7', title:'Reconciliation of COSIS scores with signed mark sheets',
@@ -169,13 +183,13 @@ const FRAMEWORK = [
       standard:'No variance between the signed mark sheet and the score posted in COSIS.',
       evidence:'COSIS printouts; signed mark sheets.',
       responsible:'Campus Academic Officer',
-      grid:{ id:'g_disc', title:'Score discrepancies between mark sheets and COSIS',
+      grid:{ id:'g_disc', title:'Score discrepancies between mark sheets and COSIS', exceptions:true,
         cols:[
-          {k:'code',   label:'Module code',    type:'text',   w:120},
-          {k:'reg',    label:'Reg. no.',       type:'text',   w:130},
-          {k:'sheet',  label:'Score on mark sheet', type:'number', w:150},
-          {k:'cosis',  label:'Score in COSIS',  type:'number', w:130},
-          {k:'nature', label:'Nature of discrepancy', type:'text', w:220}
+          {k:'code',   label:'Module code',           type:'text',   w:130},
+          {k:'reg',    label:'Reg. no.',              type:'text',   w:140},
+          {k:'sheet',  label:'Score on mark sheet',   type:'number', w:160},
+          {k:'cosis',  label:'Score in COSIS',        type:'number', w:140},
+          {k:'nature', label:'Nature of discrepancy', type:'text',   w:230}
         ], derive:'deriveDiscrepancy' } },
 
     { id:'A8', title:'Handling, custody and hand-over of mark sheets',
@@ -211,7 +225,13 @@ const FRAMEWORK = [
       approach:'Verify that printed student examination result records are maintained at departmental level for verification and evidence purposes.',
       standard:'Each department retains printed, signed result records for the semester.',
       evidence:'Physical verification in HoD offices.',
-      responsible:'Head of Department (HoD)' },
+      responsible:'Head of Department (HoD)',
+      grid:{ id:'g_norecords', title:'Departments not retaining printed result records', exceptions:true,
+        cols:[
+          {k:'dept',   label:'Department',            type:'text',   w:230},
+          {k:'nature', label:'What was missing',      type:'select', options:['No printed records at all','Records incomplete','Records unsigned','Records not filed'], w:220},
+          {k:'remark', label:'Remarks',               type:'text',   w:250}
+        ], derive:'deriveNoRecords' } },
 
     { id:'A12', title:'Other anomalies in the handling of examination materials',
       approach:'Identify any anomalies related to examination booklets, mark sheets, attendance records, result records, printing and photocopying registers, and custody arrangements.',
@@ -219,10 +239,14 @@ const FRAMEWORK = [
       evidence:'Printing register; attendance records; custody register.',
       responsible:'Examinations Officer',
       probes:[
-        {k:'printRegister', label:'Printing register captures module, assessment type, pages and copies?', type:'select', options:['Yes','No','Partly'], showIf:'always'},
-        {k:'printedCopies', label:'Total examination copies printed', type:'number', showIf:'always'},
-        {k:'actualCands',   label:'Total candidates who sat', type:'number', showIf:'always'}
-      ], deriveOnly:'derivePrintVariance' }
+        {k:'printRegister', label:'Printing register captures module, assessment type, pages and copies?', type:'select', options:['Yes','No','Partly'], showIf:'always'}
+      ],
+      grid:{ id:'g_examanom', title:'Anomalies in the handling of examination materials', exceptions:true,
+        cols:[
+          {k:'area',   label:'Area',    type:'select', options:['Examination booklets','Mark sheets','Attendance records','Result records','Printing / photocopying','Custody and storage','Other'], w:200},
+          {k:'detail', label:'Anomaly observed', type:'text', w:340},
+          {k:'remark', label:'Remarks', type:'text', w:200}
+        ], derive:'deriveExamAnomaly' } }
   ]
 },
 
@@ -239,68 +263,97 @@ const FRAMEWORK = [
       standard:'100% of coursework mark sheets submitted to HoDs.',
       evidence:'Departmental submission registers; mark sheet files.',
       responsible:'Head of Department (HoD)',
-      grid:{ id:'g_ca', title:'Coursework mark sheet status by department',
+      grid:{ id:'g_ca_sub', title:'Coursework mark sheets not submitted', exceptions:true,
         cols:[
-          {k:'dept',    label:'Department',        type:'text',   w:200},
-          {k:'expected',label:'Modules taught',    type:'number', w:130},
-          {k:'submitted',label:'Mark sheets submitted', type:'number', w:160},
-          {k:'standard',label:'In standard format', type:'number', w:150},
-          {k:'signed',  label:'Signed by instructor', type:'number', w:160},
-          {k:'uploaded',label:'Uploaded to COSIS',  type:'number', w:150},
-          {k:'remark',  label:'Remarks',            type:'text',   w:180}
-        ], derive:'deriveCA' } },
+          {k:'code',  label:'Module code', type:'text', w:120},
+          {k:'name',  label:'Module name', type:'text', w:220},
+          {k:'dept',  label:'Department',  type:'text', w:180},
+          {k:'instr', label:'Instructor',  type:'text', w:180},
+          {k:'remark',label:'Remarks',     type:'text', w:200}
+        ], derive:'deriveCASub' } },
 
     { id:'B2', title:'Adherence of coursework mark sheets to the standard format',
       approach:'Verify that mark sheets were complete and adhered to the recommended format, showing all assessment components and totals.',
       standard:'All mark sheets in the prescribed College format.',
       evidence:'Sampled coursework mark sheets.',
       responsible:'Head of Department (HoD)',
-      usesGrid:'g_ca', deriveOnly:'deriveCAFormat' },
+      grid:{ id:'g_ca_fmt', title:'Coursework mark sheets not in the prescribed format', exceptions:true,
+        cols:[
+          {k:'code',    label:'Module code', type:'text', w:120},
+          {k:'name',    label:'Module name', type:'text', w:220},
+          {k:'dept',    label:'Department',  type:'text', w:180},
+          {k:'missing', label:'What was omitted', type:'select', options:['Assessment components','Computation of totals','Candidate details','Signature block','Other'], w:200},
+          {k:'remark',  label:'Remarks',     type:'text', w:200}
+        ], derive:'deriveCAFormat' } },
 
     { id:'B3', title:'Signing of coursework mark sheets by module instructors',
       approach:'Verify that module instructors signed the coursework mark sheets.',
       standard:'All coursework mark sheets signed by the module instructor.',
       evidence:'Sampled coursework mark sheets.',
       responsible:'Head of Department (HoD)',
-      usesGrid:'g_ca', deriveOnly:'deriveCASigned' },
+      grid:{ id:'g_ca_sign', title:'Coursework mark sheets not signed by the instructor', exceptions:true,
+        cols:[
+          {k:'code',  label:'Module code', type:'text', w:120},
+          {k:'name',  label:'Module name', type:'text', w:220},
+          {k:'dept',  label:'Department',  type:'text', w:180},
+          {k:'instr', label:'Instructor',  type:'text', w:180},
+          {k:'remark',label:'Remarks',     type:'text', w:200}
+        ], derive:'deriveCASigned' } },
 
     { id:'B4', title:'Uploading of coursework scores to COSIS',
       approach:'Identify instances where coursework scores have not been uploaded to COSIS.',
       standard:'All coursework scores uploaded to COSIS before the examination board.',
       evidence:'COSIS extract; departmental records.',
       responsible:'Campus Academic Officer',
-      usesGrid:'g_ca', deriveOnly:'deriveCAUpload' },
+      grid:{ id:'g_ca_upl', title:'Coursework scores not uploaded to COSIS', exceptions:true,
+        cols:[
+          {k:'code',  label:'Module code',       type:'text',   w:120},
+          {k:'name',  label:'Module name',       type:'text',   w:220},
+          {k:'dept',  label:'Department',        type:'text',   w:180},
+          {k:'nstud', label:'Students affected', type:'number', w:150},
+          {k:'remark',label:'Remarks',           type:'text',   w:200}
+        ], derive:'deriveCAUpload' } },
 
     { id:'B5', title:'Completeness of continuous assessment components',
       approach:'Verify that all prescribed CA components (individual assignment, group assignment, Test 1 and Test 2) were administered and scored.',
       standard:'All four prescribed CA components administered and scored for every module.',
       evidence:'Coursework mark sheets; assessment plans.',
       responsible:'Head of Department (HoD)',
-      probes:[
-        {k:'modulesChecked', label:'Modules sampled', type:'number', showIf:'always'},
-        {k:'modulesComplete',label:'Modules with all CA components', type:'number', showIf:'always'},
-        {k:'missingList',    label:'Modules with missing components (list and component missing)', type:'textarea', showIf:'issue'}
-      ]},
+      grid:{ id:'g_ca_comp', title:'Modules with continuous assessment components missing', exceptions:true,
+        cols:[
+          {k:'code',    label:'Module code', type:'text', w:120},
+          {k:'name',    label:'Module name', type:'text', w:220},
+          {k:'dept',    label:'Department',  type:'text', w:180},
+          {k:'missing', label:'Component missing', type:'select', options:['Individual assignment','Group assignment','Test 1','Test 2','More than one component'], w:220},
+          {k:'remark',  label:'Remarks',     type:'text', w:200}
+        ], derive:'deriveCAComponents' } },
 
     { id:'B6', title:'Alignment of coursework scores on mark sheets and COSIS',
       approach:'Identify discrepancies between the coursework scores on mark sheets and those recorded in COSIS.',
       standard:'No variance between mark sheet and COSIS coursework scores.',
       evidence:'COSIS extract; signed mark sheets.',
       responsible:'Campus Academic Officer',
-      probes:[
-        {k:'caChecked',  label:'Coursework records reconciled', type:'number', showIf:'always'},
-        {k:'caVariance', label:'Records with variance', type:'number', showIf:'always'}
-      ]},
+      grid:{ id:'g_ca_var', title:'Coursework score variances between mark sheet and COSIS', exceptions:true,
+        cols:[
+          {k:'code',   label:'Module code',         type:'text',   w:130},
+          {k:'reg',    label:'Reg. no.',            type:'text',   w:140},
+          {k:'sheet',  label:'Score on mark sheet', type:'number', w:160},
+          {k:'cosis',  label:'Score in COSIS',      type:'number', w:140},
+          {k:'nature', label:'Nature of variance',  type:'text',   w:230}
+        ], derive:'deriveCAVariance' } },
 
     { id:'B7', title:'Other coursework anomalies',
       approach:'Identify anomalies such as identical scores across candidates, negative or out-of-range scores, unusually high failure rates, or missing candidates.',
       standard:'Coursework scores must be individually determined and within range.',
       evidence:'COSIS analytics; mark sheets.',
       responsible:'Head of Department (HoD)',
-      probes:[
-        {k:'anomalyTypes', label:'Anomaly types observed', type:'multiselect',
-          options:['Identical scores across candidates','Negative or out-of-range scores','Unusually high failure rate','Missing candidates on mark sheet','Scores altered without countersignature','None observed'], showIf:'always'}
-      ]}
+      grid:{ id:'g_ca_anom', title:'Other coursework anomalies', exceptions:true,
+        cols:[
+          {k:'code',   label:'Module / department', type:'text', w:200},
+          {k:'type',   label:'Anomaly', type:'select', options:['Identical scores across candidates','Negative or out-of-range scores','Unusually high failure rate','Missing candidates on mark sheet','Scores altered without countersignature','Other'], w:250},
+          {k:'detail', label:'Detail',  type:'text', w:280},
+          {k:'remark', label:'Remarks', type:'text', w:180}
+        ], derive:'deriveCAAnomaly' } }
   ]
 },
 
@@ -317,14 +370,14 @@ const FRAMEWORK = [
       standard:'No expired curriculum may be in use; all curricula validated by NACTVET.',
       evidence:'Curriculum documents; NACTVET validation certificates.',
       responsible:'Director of Academics (DAC)',
-      grid:{ id:'g_curr', title:'Curriculum validity register',
+      grid:{ id:'g_curr', title:'Programmes with expired or unvalidated curricula', exceptions:true,
         cols:[
-          {k:'prog',   label:'Programme',        type:'text',   w:240},
-          {k:'nta',    label:'NTA level',        type:'select', options:['4','5','6','7','8','9'], w:90},
-          {k:'year',   label:'Curriculum year',  type:'text',   w:130},
-          {k:'expiry', label:'Expiry year',      type:'text',   w:120},
-          {k:'status', label:'Validation status',type:'select', options:['Valid','Expired','Under review','Submitted to NACTVET','Awaiting validation'], w:180},
-          {k:'remark', label:'Remarks',          type:'text',   w:200}
+          {k:'prog',   label:'Programme',       type:'text',   w:250},
+          {k:'nta',    label:'NTA level',       type:'select', options:['4','5','6','7','8','9'], w:100},
+          {k:'year',   label:'Curriculum year', type:'text',   w:140},
+          {k:'expiry', label:'Expiry year',     type:'text',   w:130},
+          {k:'status', label:'Status',          type:'select', options:['Expired','Under review','Submitted to NACTVET','Awaiting validation'], w:190},
+          {k:'remark', label:'Remarks',         type:'text',   w:200}
         ], derive:'deriveCurriculum' } },
 
     { id:'C2', title:'Delivery of all modules prescribed in the approved curriculum',
@@ -332,24 +385,28 @@ const FRAMEWORK = [
       standard:'All modules in the approved curriculum delivered in the prescribed semester.',
       evidence:'Semester implementation reports; timetables; attendance registers.',
       responsible:'Head of Department (HoD)',
-      probes:[
-        {k:'modulesPrescribed', label:'Modules prescribed for the semester', type:'number', showIf:'always'},
-        {k:'modulesDelivered',  label:'Modules actually delivered', type:'number', showIf:'always'},
-        {k:'skipped',           label:'Modules skipped, compressed or taught out of sequence', type:'textarea', showIf:'issue'}
-      ]},
+      grid:{ id:'g_notdeliv', title:'Modules not delivered as approved', exceptions:true,
+        cols:[
+          {k:'code',   label:'Module code', type:'text',   w:120},
+          {k:'name',   label:'Module name', type:'text',   w:220},
+          {k:'prog',   label:'Programme',   type:'text',   w:180},
+          {k:'dept',   label:'Department',  type:'text',   w:170},
+          {k:'nature', label:'What happened', type:'select', options:['Not delivered','Partially delivered','Compressed','Taught out of sequence'], w:190},
+          {k:'remark', label:'Remarks',     type:'text',   w:200}
+        ], derive:'deriveDelivery' } },
 
     { id:'C3', title:'Compliance of instructor teaching load with the workload policy',
       approach:'Review individual instructor timetables against the workload policy and identify lecturers exceeding the prescribed ceilings.',
       standard:'Maximum 6 modules; TFC 28 hrs/week; TNC 16 hrs/week; combined 44 hrs/week.',
       evidence:'Workload allocation report; published timetables.',
       responsible:'Timetabling Office',
-      grid:{ id:'g_wl', title:'Instructor workload allocation',
+      grid:{ id:'g_wl', title:'Instructors exceeding the workload ceilings', exceptions:true,
         cols:[
           {k:'name',  label:'Instructor',   type:'text',   w:200},
-          {k:'dept',  label:'Department',   type:'text',   w:170},
-          {k:'nmod',  label:'Modules',      type:'number', w:100},
-          {k:'tfc',   label:'TFC hrs/week', type:'number', w:130},
-          {k:'tnc',   label:'TNC hrs/week', type:'number', w:130},
+          {k:'dept',  label:'Department',   type:'text',   w:180},
+          {k:'nmod',  label:'Modules',      type:'number', w:110},
+          {k:'tfc',   label:'TFC hrs/week', type:'number', w:140},
+          {k:'tnc',   label:'TNC hrs/week', type:'number', w:140},
           {k:'remark',label:'Remarks',      type:'text',   w:200}
         ], derive:'deriveWorkload' } },
 
@@ -358,28 +415,42 @@ const FRAMEWORK = [
       standard:'Every module allocated to an instructor qualified in that field.',
       evidence:'Staff qualification list; transcripts; module allocation records.',
       responsible:'Head of Department (HoD)',
-      probes:[
-        {k:'allocChecked',  label:'Module allocations checked', type:'number', showIf:'always'},
-        {k:'allocMismatch', label:'Allocations not aligned with specialisation', type:'number', showIf:'always'},
-        {k:'mismatchList',  label:'Details of misaligned allocations', type:'textarea', showIf:'issue'}
-      ]},
+      grid:{ id:'g_alloc', title:'Module allocations not aligned with instructor specialisation', exceptions:true,
+        cols:[
+          {k:'code',  label:'Module code', type:'text', w:120},
+          {k:'name',  label:'Module name', type:'text', w:220},
+          {k:'instr', label:'Instructor',  type:'text', w:190},
+          {k:'spec',  label:"Instructor's specialisation", type:'text', w:210},
+          {k:'dept',  label:'Department',  type:'text', w:170},
+          {k:'remark',label:'Remarks',     type:'text', w:190}
+        ], derive:'deriveAllocation' } },
 
     { id:'C5', title:'Uploading of course outlines and assessment plans to the LMS (Moodle)',
-      approach:'Check the Moodle report to determine how many instructors uploaded course outlines and assessment plans.',
+      approach:'Check the Moodle report to determine which instructors have not uploaded course outlines and assessment plans.',
       standard:'100% of instructors upload course outlines and assessment plans.',
       evidence:'Moodle activity report.',
       responsible:'Coordinator – E-Learning',
-      probes:[
-        {k:'instrTotal',  label:'Instructors expected to upload', type:'number', showIf:'always'},
-        {k:'instrUpload', label:'Instructors who uploaded', type:'number', showIf:'always'}
-      ], deriveOnly:'deriveLMS' },
+      grid:{ id:'g_lms', title:'Instructors who did not upload to the LMS', exceptions:true,
+        cols:[
+          {k:'name',    label:'Instructor',  type:'text',   w:200},
+          {k:'dept',    label:'Department',  type:'text',   w:190},
+          {k:'missing', label:'Not uploaded', type:'select', options:['Course outline','Assessment plan','Both'], w:190},
+          {k:'remark',  label:'Remarks',     type:'text',   w:220}
+        ], derive:'deriveLMS' } },
 
     { id:'C6', title:'Module content overlap and naming consistency',
       approach:'Compare module content and names across programmes and intakes to identify duplication or inconsistent naming.',
       standard:'Module names and content consistent across programmes and intakes.',
       evidence:'Curriculum documents; module outlines.',
       responsible:'Director of Academics (DAC)',
-      probes:[{k:'overlapDetail', label:'Modules with overlapping content or inconsistent naming', type:'textarea', showIf:'issue'}]},
+      grid:{ id:'g_overlap', title:'Modules with overlapping content or inconsistent naming', exceptions:true,
+        cols:[
+          {k:'code',   label:'Module code', type:'text', w:120},
+          {k:'name',   label:'Module name', type:'text', w:220},
+          {k:'prog',   label:'Programme(s)', type:'text', w:200},
+          {k:'nature', label:'Nature',      type:'select', options:['Content overlap','Inconsistent naming','Duplicated module'], w:180},
+          {k:'detail', label:'Detail',      type:'text', w:250}
+        ], derive:'deriveOverlap' } },
 
     { id:'C7', title:'Other curriculum implementation issues',
       approach:'Identify other anomalies such as compressed teaching schedules, unapproved substitutions, or inadequate practical/field components.',
@@ -402,20 +473,20 @@ const FRAMEWORK = [
       standard:'Every teaching room equipped with a functional projector, screen, whiteboard and, where applicable, a P/A system.',
       evidence:'Physical inspection; asset register.',
       responsible:'Head of Estates / Maintenance Unit',
-      grid:{ id:'g_rooms', title:'Room-by-room readiness inspection',
+      grid:{ id:'g_rooms', title:'Rooms not ready for teaching', exceptions:true,
         cols:[
           {k:'room',   label:'Room / facility', type:'text',   w:150},
           {k:'type',   label:'Type',            type:'select', options:['Classroom','Lecture theatre','Laboratory','Workshop','Library space','Office','Other'], w:150},
-          {k:'cap',    label:'Seats required',  type:'number', w:120},
-          {k:'seatsOk',label:'Seats serviceable',type:'number',w:140},
-          {k:'proj',   label:'Projector',       type:'select', options:['Functional','Faulty','Absent'], w:120},
-          {k:'screen', label:'Screen',          type:'select', options:['Functional','Faulty','Absent'], w:110},
-          {k:'hdmi',   label:'HDMI cable',      type:'select', options:['Available','Absent'], w:120},
-          {k:'board',  label:'Whiteboard',      type:'select', options:['Good','Worn','Absent'], w:110},
-          {k:'pa',     label:'P/A system',      type:'select', options:['Functional','Faulty','Absent','Not required'], w:130},
-          {k:'power',  label:'Power / sockets', type:'select', options:['Adequate','Inadequate','Faulty'], w:130},
-          {k:'fans',   label:'Fans / lighting', type:'select', options:['Adequate','Inadequate','Faulty'], w:130},
-          {k:'clean',  label:'Cleanliness',     type:'select', options:['Good','Fair','Poor'], w:110},
+          {k:'cap',    label:'Seats required',  type:'number', w:130},
+          {k:'seatsOk',label:'Seats serviceable',type:'number',w:150},
+          {k:'proj',   label:'Projector',       type:'select', options:['Faulty','Absent'], w:120},
+          {k:'screen', label:'Screen',          type:'select', options:['Faulty','Absent'], w:110},
+          {k:'hdmi',   label:'HDMI cable',      type:'select', options:['Absent'], w:120},
+          {k:'board',  label:'Whiteboard',      type:'select', options:['Worn','Absent'], w:120},
+          {k:'pa',     label:'P/A system',      type:'select', options:['Faulty','Absent'], w:130},
+          {k:'power',  label:'Power / sockets', type:'select', options:['Inadequate','Faulty'], w:140},
+          {k:'fans',   label:'Fans / lighting', type:'select', options:['Inadequate','Faulty'], w:140},
+          {k:'clean',  label:'Cleanliness',     type:'select', options:['Fair','Poor'], w:120},
           {k:'remark', label:'Remarks',         type:'text',   w:200}
         ], derive:'deriveRooms' } },
 
@@ -424,21 +495,27 @@ const FRAMEWORK = [
       standard:'Campus safe, clean and sanitary at the commencement of the academic year.',
       evidence:'Physical inspection; maintenance logs.',
       responsible:'Head of Estates / Maintenance Unit',
-      probes:[
-        {k:'safetyAreas', label:'Areas requiring intervention', type:'multiselect',
-          options:['Toilets / washrooms','Sewage system','Water supply','Walkways and corridors','External lighting','Fire safety equipment','Waste management','Security / fencing','Drainage','None'], showIf:'always'},
-        {k:'safetyDetail', label:'Details of safety and sanitation deficiencies', type:'textarea', showIf:'issue'}
-      ]},
+      grid:{ id:'g_safety', title:'Safety, cleanliness and sanitation deficiencies', exceptions:true,
+        cols:[
+          {k:'area',     label:'Area', type:'select', options:['Toilets / washrooms','Sewage system','Water supply','Walkways and corridors','External lighting','Fire safety equipment','Waste management','Security / fencing','Drainage','Other'], w:210},
+          {k:'location', label:'Location', type:'text', w:190},
+          {k:'detail',   label:'Deficiency observed', type:'text', w:320},
+          {k:'remark',   label:'Remarks', type:'text', w:190}
+        ], derive:'deriveSafety' } },
 
     { id:'D3', title:'Maintenance and repairs required before the academic year',
       approach:'Identify floors, ceilings, seats, ceiling fans, doors, windows and corridors requiring maintenance or repair.',
       standard:'All identified defects rectified before the academic year commences.',
       evidence:'Physical inspection; outstanding works schedule.',
       responsible:'Head of Estates / Maintenance Unit',
-      probes:[
-        {k:'worksOutstanding', label:'Outstanding works (describe and quantify)', type:'textarea', showIf:'issue'},
-        {k:'worksBudgeted',    label:'Are the works budgeted for in the current financial year?', type:'select', options:['Yes','No','Partly','Unknown'], showIf:'issue'}
-      ]},
+      grid:{ id:'g_works', title:'Maintenance and repairs outstanding', exceptions:true,
+        cols:[
+          {k:'item',   label:'Item / location', type:'text',   w:210},
+          {k:'nature', label:'Work required',   type:'text',   w:300},
+          {k:'qty',    label:'Quantity',        type:'number', w:120},
+          {k:'budget', label:'Budgeted?',       type:'select', options:['Yes','No','Partly','Unknown'], w:150},
+          {k:'remark', label:'Remarks',         type:'text',   w:190}
+        ], derive:'deriveWorks' } },
 
     { id:'D4', title:'ICT infrastructure, internet connectivity and e-learning platform readiness',
       approach:'Verify that the LMS, servers, campus network and internet bandwidth are operational and adequate for the incoming cohort.',
@@ -447,7 +524,6 @@ const FRAMEWORK = [
       responsible:'ICT Manager',
       probes:[
         {k:'lmsUp',      label:'LMS operational and accessible?', type:'select', options:['Yes','No','Intermittent'], showIf:'always'},
-        {k:'bandwidth',  label:'Internet bandwidth (Mbps)', type:'number', showIf:'always'},
         {k:'wifiCover',  label:'Wireless coverage of teaching and study areas', type:'select', options:['Full','Partial','Minimal','None'], showIf:'always'},
         {k:'biometric',  label:'Classroom biometric attendance system status', type:'select', options:['Operational','Piloting','Procured not installed','Not implemented'], showIf:'always'}
       ]},
@@ -458,19 +534,26 @@ const FRAMEWORK = [
       evidence:'Physical inspection; enrolment projections.',
       responsible:'Dean of Students',
       campuses:'ALL',
-      probes:[
-        {k:'expEnrol',  label:'Projected enrolment for 2026/2027', type:'number', showIf:'always'},
-        {k:'welfareGap',label:'Welfare facility gaps identified', type:'textarea', showIf:'issue'}
-      ]},
+      grid:{ id:'g_welfare', title:'Welfare facility gaps', exceptions:true,
+        cols:[
+          {k:'facility', label:'Facility', type:'select', options:['Hostels','Cafeteria','Sports facilities','Health facility','Counselling space','Water and sanitation','Other'], w:190},
+          {k:'gap',      label:'Gap identified', type:'text', w:330},
+          {k:'qty',      label:'Shortfall (number)', type:'number', w:170},
+          {k:'remark',   label:'Remarks', type:'text', w:190}
+        ], derive:'deriveWelfare' } },
 
     { id:'D6', title:'Staffing readiness of academic and support units',
       approach:'Verify that teaching and support units are staffed to the establishment required for the incoming academic year.',
       standard:'No teaching unit begins the academic year with a critical staffing gap.',
       evidence:'Staff establishment returns; recruitment records.',
       responsible:'Campus Director',
-      probes:[
-        {k:'staffGaps', label:'Units with staffing gaps and numbers required', type:'textarea', showIf:'issue'}
-      ]},
+      grid:{ id:'g_staff', title:'Units with staffing gaps', exceptions:true,
+        cols:[
+          {k:'unit',   label:'Unit / department', type:'text',   w:220},
+          {k:'cadre',  label:'Cadre required',    type:'text',   w:200},
+          {k:'nreq',   label:'Number required',   type:'number', w:160},
+          {k:'remark', label:'Remarks',           type:'text',   w:230}
+        ], derive:'deriveStaff' } },
 
     { id:'D7', title:'Other infrastructure and facility deficiencies',
       approach:'Record any further deficiency observed that would impair the commencement of teaching.',
@@ -489,88 +572,97 @@ const FRAMEWORK = [
   campuses: 'ALL',
   items: [
     { id:'E1', title:'ICT infrastructure supporting digital learning and research',
-      approach:'Inspect physical ICT facilities in the library; verify the number of computer workstations, internet connectivity and bandwidth; compare against user demand.',
+      approach:'Inspect physical ICT facilities in the library; verify computer workstations, internet connectivity and bandwidth against user demand.',
       standard:'Workstations and connectivity adequate for the registered user population.',
       evidence:'Physical inspection; asset register; bandwidth records.',
       responsible:'Campus Librarian',
-      probes:[
-        {k:'workstations',   label:'Functional computer workstations', type:'number', showIf:'always'},
-        {k:'workstationsReq',label:'Workstations required to meet demand', type:'number', showIf:'always'},
-        {k:'libWifi',        label:'Wireless connectivity in the library', type:'select', options:['Full','Partial','None'], showIf:'always'}
-      ], deriveOnly:'deriveLibICT' },
+      grid:{ id:'g_libict', title:'Library ICT deficiencies', exceptions:true,
+        cols:[
+          {k:'item',   label:'Item', type:'select', options:['Computer workstations','Internet bandwidth','Wireless coverage','Printers / scanners','Power backup','Other'], w:200},
+          {k:'detail', label:'Deficiency observed', type:'text', w:320},
+          {k:'qty',    label:'Number short / affected', type:'number', w:190},
+          {k:'remark', label:'Remarks', type:'text', w:190}
+        ], derive:'deriveLibICT' } },
 
     { id:'E2', title:'Acquisition of learning resources',
-      approach:'Compare procurement records against the approved procurement plan; verify quantities and types of textbooks, reference materials, e-books and digital journals acquired; confirm delivery and availability.',
+      approach:'Compare procurement records against the approved procurement plan; identify categories where planned acquisitions were not delivered or are not available for use.',
       standard:'Acquisitions executed in line with the approved procurement plan.',
       evidence:'Procurement plan; delivery notes; accession register.',
       responsible:'Campus Librarian',
-      grid:{ id:'g_lib', title:'Acquisition against plan',
+      grid:{ id:'g_lib', title:'Learning resources not acquired as planned', exceptions:true,
         cols:[
-          {k:'cat',     label:'Resource category', type:'select', options:['Textbooks','Reference materials','E-books','Digital journals','Databases','Periodicals','Other'], w:180},
-          {k:'planned', label:'Planned quantity',  type:'number', w:150},
-          {k:'acquired',label:'Acquired quantity', type:'number', w:150},
-          {k:'avail',   label:'Available for use?',type:'select', options:['Yes','No','Partly'], w:150},
-          {k:'remark',  label:'Remarks',           type:'text',   w:220}
+          {k:'cat',    label:'Resource category', type:'select', options:['Textbooks','Reference materials','E-books','Digital journals','Databases','Periodicals','Other'], w:200},
+          {k:'nshort', label:'Quantity short',    type:'number', w:160},
+          {k:'avail',  label:'Available for use?',type:'select', options:['No','Partly'], w:170},
+          {k:'remark', label:'Remarks',           type:'text',   w:250}
         ], derive:'deriveLibAcq' } },
 
     { id:'E3', title:'Subscriptions to academic e-resources',
-      approach:'Review subscription agreements and payment records for databases, e-journals and e-book platforms; verify accessibility and timely renewal.',
+      approach:'Review subscription agreements and payment records; identify subscriptions that have lapsed or are inaccessible to users.',
       standard:'Subscriptions current, paid and accessible to users.',
       evidence:'Subscription agreements; payment vouchers; access tests.',
       responsible:'Director of Library Services',
-      probes:[
-        {k:'subsTotal',   label:'Subscriptions held', type:'number', showIf:'always'},
-        {k:'subsActive',  label:'Subscriptions currently active and accessible', type:'number', showIf:'always'},
-        {k:'subsLapsed',  label:'Lapsed or inaccessible subscriptions (list)', type:'textarea', showIf:'issue'}
-      ], deriveOnly:'deriveSubs' },
+      grid:{ id:'g_subs', title:'Lapsed or inaccessible e-resource subscriptions', exceptions:true,
+        cols:[
+          {k:'name',     label:'Subscription / database', type:'text', w:240},
+          {k:'provider', label:'Provider', type:'text', w:180},
+          {k:'status',   label:'Status',   type:'select', options:['Lapsed','Payment outstanding','Inaccessible'], w:190},
+          {k:'expiry',   label:'Expiry date', type:'text', w:150},
+          {k:'remark',   label:'Remarks',  type:'text', w:200}
+        ], derive:'deriveSubs' } },
 
     { id:'E4', title:'Information literacy training',
-      approach:'Review training schedules and attendance records; verify that sessions were conducted for both students and staff.',
+      approach:'Review training schedules and attendance records; identify cohorts or staff groups that did not receive information literacy training.',
       standard:'Information literacy training delivered each academic year to students and staff.',
       evidence:'Training schedule; attendance registers.',
       responsible:'Campus Librarian',
-      probes:[
-        {k:'sessStudents', label:'Sessions conducted for students', type:'number', showIf:'always'},
-        {k:'sessStaff',    label:'Sessions conducted for staff', type:'number', showIf:'always'},
-        {k:'attTotal',     label:'Total attendance recorded', type:'number', showIf:'always'}
-      ]},
+      grid:{ id:'g_lit', title:'Groups that did not receive information literacy training', exceptions:true,
+        cols:[
+          {k:'group',  label:'Cohort / staff group', type:'text', w:250},
+          {k:'reason', label:'Reason given', type:'text', w:280},
+          {k:'remark', label:'Remarks', type:'text', w:220}
+        ], derive:'deriveLiteracy' } },
 
     { id:'E5', title:'Library usage statistics',
-      approach:'Analyse usage data — book check-outs, database logins and physical attendance — and compare trends against previous periods.',
+      approach:'Analyse usage data — book check-outs, database logins and physical attendance — and record any metric that declined against the previous period.',
       standard:'Usage monitored, reported and trending against previous periods.',
       evidence:'Circulation system reports; gate counts; database analytics.',
       responsible:'Campus Librarian',
-      grid:{ id:'g_usage', title:'Usage statistics against the previous period',
+      grid:{ id:'g_usage', title:'Usage metrics that declined against the previous period', exceptions:true,
         cols:[
-          {k:'metric', label:'Metric', type:'select', options:['Physical attendance','Book check-outs','Database logins','E-book downloads','Reference queries','Other'], w:190},
-          {k:'prev',   label:'Previous period', type:'number', w:150},
-          {k:'curr',   label:'Current period',  type:'number', w:150},
-          {k:'remark', label:'Remarks',         type:'text',   w:240}
+          {k:'metric', label:'Metric', type:'select', options:['Physical attendance','Book check-outs','Database logins','E-book downloads','Reference queries','Other'], w:200},
+          {k:'prev',   label:'Previous period', type:'number', w:160},
+          {k:'curr',   label:'Current period',  type:'number', w:160},
+          {k:'remark', label:'Remarks',         type:'text',   w:250}
         ], derive:'deriveUsage' } },
 
     { id:'E6', title:'Deposit of dissertations and research outputs in the institutional repository',
-      approach:'Reconcile the number of dissertations deposited in the College repository against graduating cohorts; verify departmental submission to the Directorate of Library Services.',
+      approach:'Reconcile dissertations deposited in the College repository against graduating cohorts; identify departments with outstanding deposits.',
       standard:'All dissertations of the completed academic year deposited in the repository.',
       evidence:'Repository record; departmental submission registers.',
       responsible:'Director of Library Services',
-      probes:[
-        {k:'dissExpected', label:'Dissertations expected for the cohort', type:'number', showIf:'always'},
-        {k:'dissDeposited',label:'Dissertations deposited', type:'number', showIf:'always'},
-        {k:'dissRetained', label:'Hard copies still retained in departments', type:'number', showIf:'always'}
-      ], deriveOnly:'deriveRepo' },
+      grid:{ id:'g_repo', title:'Dissertations not deposited in the institutional repository', exceptions:true,
+        cols:[
+          {k:'dept',     label:'Department', type:'text', w:200},
+          {k:'prog',     label:'Programme',  type:'text', w:200},
+          {k:'ncount',   label:'Number outstanding', type:'number', w:170},
+          {k:'location', label:'Where currently held', type:'select', options:['Retained in department','Not submitted by candidate','Unknown'], w:220},
+          {k:'remark',   label:'Remarks', type:'text', w:190}
+        ], derive:'deriveRepo' } },
 
     { id:'E7', title:'Other library deficiencies',
       approach:'Identify shortfalls such as malfunctioning equipment, inadequate user support, non-compliance with the opening and closing schedule, or staff shortage.',
       standard:'Library operates to the published schedule with adequate staffing and functional equipment.',
       evidence:'Physical inspection; staff establishment; user interviews.',
       responsible:'Campus Librarian',
-      probes:[
-        {k:'libGaps', label:'Deficiencies observed', type:'multiselect',
-          options:['Malfunctioning equipment','Inadequate user support','Opening hours not observed','Staff shortage','Inadequate study space','Poor lighting or ventilation','Weak wireless coverage','None'], showIf:'always'}
-      ]}
+      grid:{ id:'g_libgap', title:'Other library deficiencies', exceptions:true,
+        cols:[
+          {k:'area',   label:'Area', type:'select', options:['Malfunctioning equipment','Inadequate user support','Opening hours not observed','Staff shortage','Inadequate study space','Poor lighting or ventilation','Weak wireless coverage','Other'], w:230},
+          {k:'detail', label:'Deficiency observed', type:'text', w:330},
+          {k:'remark', label:'Remarks', type:'text', w:200}
+        ], derive:'deriveLibGap' } }
   ]
 },
-
 {
   id: 'F', code: '6',
   noun: 'the implementation of the fourth quarter audit recommendations',

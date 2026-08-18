@@ -602,10 +602,12 @@ function itemHtml(a, it, n) {
 function gridHtml(g, ro) {
   const rows = gridRows(g.id);
   let h = `<div class="field" style="margin-top:14px"><label>${esc(g.title)} — evidence sheet</label>
+    ${g.exceptions ? `<div class="help" style="margin:-4px 0 8px">Record <b>only the exceptions</b> — the ones that failed. Everything that met the standard is left out. If nothing failed, leave this empty and mark the item Compliant.</div>` : ''}
     <div class="gridwrap"><table class="dg"><thead><tr><th style="width:34px">#</th>
     ${g.cols.map(c => `<th style="min-width:${c.w || 120}px">${esc(c.label)}</th>`).join('')}<th></th></tr></thead><tbody>`;
   if (!rows.length) h += `<tr><td colspan="${g.cols.length + 2}" style="padding:14px;text-align:center;color:#7b8798">
-    No records yet — add a row, or paste from Excel.</td></tr>`;
+    ${g.exceptions ? 'No exceptions recorded — add a row for each one you found, or paste from Excel.'
+                   : 'No records yet — add a row, or paste from Excel.'}</td></tr>`;
   rows.forEach((row, i) => {
     h += `<tr><td style="text-align:center;color:#8b95a5;font-size:11px">${i + 1}</td>` + g.cols.map(c => {
       const v = row[c.k] == null ? '' : row[c.k];

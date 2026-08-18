@@ -17,9 +17,9 @@ passed around and nothing has to be merged by hand.
 |---|---|
 | **Six audit aspects** | Marking, grading and moderation of Semester II examinations · Continuous assessment · Validity of curriculum implementation · Readiness of infrastructure and facilities · Library services · Implementation of the Fourth Quarter recommendations |
 | **Logical branching** | The campus decides which items and which carried-forward recommendations load. The conclusion recorded against an item decides which fields appear and which section of the report it lands in. |
-| **Evidence sheets** | Module moderation register, moderator workload, coursework position by department, curriculum validity, instructor workload, room-by-room inspection, library acquisition and usage. Type, paste from Excel, or import CSV. |
+| **Exceptions-only evidence sheets** | Every sheet records **only what failed** — modules not moderated, modules below the sample threshold, moderators over the ceiling, mark sheets unsigned, instructors over the workload limit, rooms not ready, expired curricula, lapsed subscriptions. Nothing that met the standard is typed in. Type, paste from Excel, or import CSV. |
 | **Automatic analysis** | Breaches of the institutional standards are flagged as the evidence is entered, and the issue statement and recommendation are drafted in the language of previous reports. |
-| **Report generation** | Cover page, Sections 1.0–7.0, appendices built from the evidence sheets, exported to Word, PDF and Excel. |
+| **Report generation** | Cover page, Sections 1.0–7.0, appendices built from the evidence sheets, exported to Word, PDF and Excel. Section 3.0 lists the areas of strength; Section 4.0 carries only issues, each with its extent and its affected items named one by one. |
 | **Management responses** | Each responsible office clicks its own card, sees only its own issues, and records its response. It appears in the report immediately. |
 | **Consolidation** | A College-wide report comparing all four campuses and identifying issues that recur at more than one. |
 | **Administration** | Access codes, activity log, and one-click backup and restore of the whole database. |
