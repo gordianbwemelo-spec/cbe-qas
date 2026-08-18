@@ -7,6 +7,7 @@
 const express = require('express');
 const cookieSession = require('cookie-session');
 const crypto = require('crypto');
+const fs = require('fs');
 const path = require('path');
 const db = require('./db');
 const { identityList } = require('./data/reference');
@@ -146,6 +147,25 @@ app.post('/api/audits', requireRole('qa_manager', 'auditor'), wrap(async (req, r
      RETURNING *`,
     [campus, YEAR, QUARTER, JSON.stringify(req.body.session || {}), JSON.stringify(req.body.standards || {})]);
   await log(rows[0].id, req, 'opened audit file', campus);
+  res.json({ audit: rows[0] });
+}));
+
+/* Clear a campus audit back to an empty file. Used to discard practice data
+   before the real exercise begins. Manager only, and never on an issued
+   report — that has to be reopened deliberately first. */
+app.post('/api/audit/:id/reset', requireRole('qa_manager'), wrap(async (req, res) => {
+  const id = Number(req.params.id);
+  const a = await db.query('SELECT * FROM audits WHERE id=$1', [id]);
+  if (!a.rows.length) return res.status(404).json({ error: 'Audit not found' });
+  if (a.rows[0].locked) return res.status(409).json({ error: 'The report has been issued. Reopen it first.' });
+  await db.tx(async c => {
+    for (const t of ['audit_responses', 'audit_followups', 'audit_grids', 'audit_items'])
+      await c.query(`DELETE FROM ${t} WHERE audit_id=$1`, [id]);
+    await c.query(`UPDATE audits SET general='{}'::jsonb, way_forward='[]'::jsonb,
+                   rev=nextval('rev_seq'), updated_at=now() WHERE id=$1`, [id]);
+  });
+  await log(id, req, 'cleared the audit file', a.rows[0].campus);
+  const { rows } = await db.query('SELECT * FROM audits WHERE id=$1', [id]);
   res.json({ audit: rows[0] });
 }));
 
@@ -488,11 +508,27 @@ app.get('/api/activity', requireRole('qa_manager'), wrap(async (req, res) => {
 }));
 
 /* ------------------------------- static --------------------------------- */
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1h', etag: true }));
+/* The interface is a set of plain .js files. Without a version stamp a
+   browser will happily keep serving yesterday's copy after a deployment, so
+   every asset URL carries a hash of the files themselves: change a file and
+   the URL changes with it. The page that references them is never cached. */
+const ASSETS = ['framework.js', 'derive.js', 'export.js', 'report.js', 'app.js', 'app.css'];
+const BUILD = (() => {
+  const h = crypto.createHash('sha1');
+  for (const f of ASSETS) {
+    try { h.update(fs.readFileSync(path.join(__dirname, 'public', f))); }
+    catch { h.update(f); }
+  }
+  return h.digest('hex').slice(0, 10);
+})();
+const INDEX = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8')
+  .replace(/(href|src)="\/([a-z]+\.(?:js|css))"/g, `$1="/$2?v=${BUILD}"`);
+
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '30d', etag: true, index: false }));
 app.get('/healthz', (req, res) => res.type('text').send('ok'));
 app.use((req, res) => {
   if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Not found' });
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.set('Cache-Control', 'no-store, must-revalidate').type('html').send(INDEX);
 });
 
 /* -------------------------------- boot ---------------------------------- */

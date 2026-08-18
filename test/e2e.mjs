@@ -12,6 +12,10 @@ const step = async (n, fn) => { try { await fn(); console.log('  ok  ' + n); } c
 const psql = q => execSync(
   `psql -h /tmp -p 5433 -U qauser -d qadb -tAc ${JSON.stringify(q)}`, { encoding: 'utf8' }).trim();
 
+/* Start from an empty database every time — a half-finished previous run
+   would otherwise leave rows behind and fail the next one for no reason. */
+psql('TRUNCATE audit_responses, audit_followups, audit_grids, audit_items, activity, audits RESTART IDENTITY CASCADE');
+
 const MANAGER = 'mgr';
 const AUD_DODOMA = 'aud:Dodoma';
 const OFF_DASS = 'off:Director of Academic Support Services (DASS)';
@@ -24,7 +28,8 @@ const mk = async () => {
   const ctx = await b.newContext({ acceptDownloads: true, viewport: { width: 1440, height: 1000 } });
   const p = await ctx.newPage();
   p.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
-  p.on('console', m => { const s = m.text(); if (m.type() === 'error' && !/favicon|status of 40[13]|ERR_FAILED|CORS/.test(s)) errors.push('CONSOLE: ' + s); });
+  p.on('console', m => { const s = m.text(); /* 400/401/403/409/423 are the deliberate refusals the negative tests provoke */
+    if (m.type() === 'error' && !/favicon|status of (40[0139]|423)|ERR_FAILED|CORS/.test(s)) errors.push('CONSOLE: ' + s); });
   return p;
 };
 const login = async (p, name, key) => {
@@ -355,6 +360,33 @@ await step('restore rebuilds the database from the backup', async () => {
   if (n < 8) throw new Error('restore lost items: ' + n);
   const r = Number(psql('select count(*) from audit_responses'));
   if (r < 1) throw new Error('restore lost responses');
+});
+
+await step('clearing an issued audit is refused until it is reopened', async () => {
+  const id = Number(psql("select id from audits where campus='Dodoma'"));
+  const r = await mgr.evaluate(async aid => {
+    try { await API.post(`/api/audit/${aid}/reset`, {}); return 'allowed'; }
+    catch (e) { return e.message; }
+  }, id);
+  if (r === 'allowed') throw new Error('an issued report was cleared without being reopened');
+});
+await step('clearing an audit file empties it', async () => {
+  const id = Number(psql("select id from audits where campus='Dodoma'"));
+  const before = Number(psql(`select count(*) from audit_items where audit_id=${id}`));
+  if (before < 5) throw new Error('nothing to clear: ' + before);
+  await mgr.evaluate(async aid => {
+    await API.post(`/api/audit/${aid}/issue`, { locked: false });
+    await API.post(`/api/audit/${aid}/reset`, {});
+  }, id);
+  await mgr.waitForTimeout(800);
+  for (const t of ['audit_items', 'audit_grids', 'audit_followups', 'audit_responses']) {
+    const n = Number(psql(`select count(*) from ${t} where audit_id=${id}`));
+    if (n) throw new Error(`${t} not cleared: ${n}`);
+  }
+  const kept = Number(psql(`select count(*) from audits where id=${id}`));
+  if (kept !== 1) throw new Error('the audit file itself was deleted');
+  const lead = psql(`select session->>'leadAuditor' from audits where id=${id}`);
+  if (lead !== 'Dr. Gordian Bwemelo') throw new Error('set-up particulars were lost: ' + lead);
 });
 
 /* ----------------------------- 9. anonymous ------------------------------- */

@@ -345,6 +345,7 @@ async function exportActions(act, el) {
     case 'editWayForward': editWayForward(buildReport()); return;
     case 'issueReport':   await issueReport(); return;
     case 'reopenReport':  await API.post(`/api/audit/${S.auditId}/issue`, { locked: false }); S.locked = false; await loadAudits(); render(); toast('Report reopened for editing.'); return;
+    case 'resetAudit':    await resetAudit(); return;
     case 'submitResp':    await submitResponse(el.dataset.ref, el.dataset.aid); return;
     case 'newCode':       await newCode(); return;
     case 'toggleCode':    await API.patch('/api/codes/' + encodeURIComponent(el.dataset.code), { active: el.dataset.on !== '1' }); await loadCodes(); return;
@@ -631,6 +632,18 @@ function viewMyResponses() {
   });
   return h;
 }
+/* Discard everything recorded against this campus and start the file again.
+   Deliberately awkward: the campus name has to be typed out in full. */
+async function resetAudit() {
+  const name = campusObj().name;
+  const typed = prompt(`This will delete every finding, evidence sheet, follow-up and response recorded for ${name} Campus. It cannot be undone.\n\nType the campus name to confirm:`);
+  if (typed == null) return;
+  if (typed.trim().toLowerCase() !== name.toLowerCase()) { toast('Name did not match — nothing was deleted.'); return; }
+  await API.post(`/api/audit/${S.auditId}/reset`, {});
+  await openAudit(S.auditId);
+  toast(`${name} Campus audit file cleared.`);
+}
+
 async function submitResponse(ref, auditId) {
   const d = RESP_DRAFT[ref] || {};
   const cur = MY_ISSUES.find(i => i.ref === ref);

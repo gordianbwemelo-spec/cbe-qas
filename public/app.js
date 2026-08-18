@@ -463,7 +463,15 @@ function viewSetup() {
       <td>${a.followUp ? followUpRecs().length : (a.items || []).length}</td></tr>`).join('')}
     </tbody></table>
     <div class="btnrow" style="margin-top:14px"><button class="btn" data-go="general">Continue →</button></div>
-  </div>`;
+  </div>
+  ${isManager() && !S.locked ? `<div class="card">
+    <h3>Start this campus again</h3>
+    <p class="muted">Deletes every finding, evidence sheet, follow-up and response recorded for
+    ${esc(c.name)} Campus and returns the file to empty. Use it to clear practice entries before the
+    real audit begins. The campus name must be typed to confirm, and it cannot be undone —
+    take a backup first if you are unsure.</p>
+    <div class="btnrow"><button class="btn danger" data-act="resetAudit">Clear this audit file</button></div>
+  </div>` : ''}`;
 }
 
 function viewGeneral() {
