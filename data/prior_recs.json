@@ -1,0 +1,592 @@
+[
+{
+"id": "PR001",
+"campus": "DSM",
+"sourceRef": "4.1.1",
+"area": "Deposit of dissertations in the College repository",
+"issue": "Only 180 master's degree dissertations for the 2024/2025 academic year had been deposited in the institutional repository as at 22nd May, 2026. Some dissertations from the Business Administration (BA) and Procurement & Supply Chain Management (PSCM) Departments had not yet been submitted to the Directorate of Library Services.",
+"recommendation": "HoDs BA and PSCM to submit all outstanding dissertations to the Directorate of Library Services for deposit to the institutional repository",
+"responsibleOfficer": "HoDs - BA & PSCM",
+"priorResponse": ""
+},
+{
+"id": "PR002",
+"campus": "DSM",
+"sourceRef": "4.1.2",
+"area": "Handling and custody of hard copies of master's degree dissertations",
+"issue": "Fifty-nine (59) hard copies of dissertations for 2025 were still being retained in the respective departments and had not been transferred to the Library.",
+"recommendation": "All HoDs to transfer the 59 retained dissertation hard copies to the Library",
+"responsibleOfficer": "All HoDs",
+"priorResponse": ""
+},
+{
+"id": "PR003",
+"campus": "DSM",
+"sourceRef": "4.1.3",
+"area": "Publication requirement of at least one paper",
+"issue": "Publication requirement (>=1 paper) largely unmet: only 3 of 25 dissertations in PSCM and 1 of 34 in BA had a paper-submission confirmation attached. (All 9 in ICT & Mathematics were compliant.)",
+"recommendation": "Enforce the publication requirement before final dissertation acceptance",
+"responsibleOfficer": "HoDs BA & PSCM",
+"priorResponse": ""
+},
+{
+"id": "PR004",
+"campus": "DSM",
+"sourceRef": "4.1.4",
+"area": "Signing of dissertations by students and supervisors",
+"issue": "Six (6) hard copies of dissertations from the Business Administration Department had not been signed by the respective supervisors.",
+"recommendation": "HoD BA to retrieve the six unsigned dissertations, obtain the supervisors' signatures",
+"responsibleOfficer": "HoD - BA",
+"priorResponse": ""
+},
+{
+"id": "PR005",
+"campus": "DSM",
+"sourceRef": "4.2.1",
+"area": "Examination Moderation - modules not moderated",
+"issue": "Two (2) modules were not moderated, namely Microfinance Management (NTA Level 8) and Financial Risk Management (NTA Level 8). This was established during post-moderation.",
+"recommendation": "Enforce moderation of all modules",
+"responsibleOfficer": "DASS",
+"priorResponse": ""
+},
+{
+"id": "PR006",
+"campus": "DSM",
+"sourceRef": "4.2.2",
+"area": "Examination Moderation - moderation sample size",
+"issue": "The moderation sample size for 105 modules was below the required 20% threshold.",
+"recommendation": "Ensure moderators are allocated time proportional to module volume so that the 20% sample threshold is met",
+"responsibleOfficer": "DASS",
+"priorResponse": ""
+},
+{
+"id": "PR007",
+"campus": "DSM",
+"sourceRef": "4.2.3",
+"area": "Examination Moderation - moderator workload",
+"issue": "Five (05) moderators moderated more than 20 modules each, exceeding the manageable workload ceiling (Dr. Freddy Jirabi Gamba 40, Dr. Erick L. Mwambuli 38, Dr. Ikandilo Kushoka 29, Dr. Beatrice Mkunde 26, Dr. Mary Rutenge 21).",
+"recommendation": "Recruit additional moderators or consider revising Examination Rules to allow Internal Senior Instructors to moderate exams set by junior instructors",
+"responsibleOfficer": "DAC/HoDs",
+"priorResponse": ""
+},
+{
+"id": "PR008",
+"campus": "DSM",
+"sourceRef": "4.2.4",
+"area": "Incorporation of External Examiners' Scores",
+"issue": "External Examiners' scores for twenty-one (21) students had not been incorporated into COSIS. Affected modules: Human Resource Policy, International Trade and Finance, Principles of Procurement Management, Advanced Business Mathematics, and Entrepreneurship and Innovation.",
+"recommendation": "Relevant HoDs to review and update the records of the affected 21 students by uploading the External Examiners' scores into COSIS",
+"responsibleOfficer": "HoDs of affected departments",
+"priorResponse": ""
+},
+{
+"id": "PR009",
+"campus": "DSM",
+"sourceRef": "4.2.5",
+"area": "Handling of Examination Marksheets",
+"issue": "Mark sheets were retained by the Academic Officer after moderation; no clear hand-over to HoDs after moderation completion.",
+"recommendation": "Examinations Officer should hand over moderated mark sheets to the respective HoDs immediately upon completion of moderation, and obtain a signed transmittal note.",
+"responsibleOfficer": "Examinations Officer; HoDs",
+"priorResponse": ""
+},
+{
+"id": "PR010",
+"campus": "DSM",
+"sourceRef": "4.3.1",
+"area": "Workload Allocation (Curriculum Delivery)",
+"issue": "25 lecturers exceeded the prescribed weekly teaching-hour threshold; the heaviest load reached 56 hours per week.",
+"recommendation": "HoDs to revise the affected timetables to bring TFC/TNC hours within ceilings; the Timetabling Office to block-flag any draft schedule that produces a workload above the ceilings before it is published.",
+"responsibleOfficer": "DAC/HoDs (affected)",
+"priorResponse": "QAU's recommendations have been implemented. Timetables were reviewed and adjusted, and lecturers' workloads were aligned with the prescribed teaching-hour ceilings."
+},
+{
+"id": "PR011",
+"campus": "DSM",
+"sourceRef": "4.4.1",
+"area": "Examination Photocopying",
+"issue": "The printing/photocopying register does not capture module-specific details (module name, assessment type, pages per paper, copies printed), limiting verification and accountability.",
+"recommendation": "The Printing Unit In-charge to redesign the printing register to capture the module name, assessment type (test or end-of-semester examination), number of pages per paper, and number of copies printed.",
+"responsibleOfficer": "Printing Unit In-charge",
+"priorResponse": ""
+},
+{
+"id": "PR012",
+"campus": "DSM",
+"sourceRef": "4.4.2",
+"area": "Strong Room for Examination-Related Materials",
+"issue": "No strong room established for the safe handling of examination-related materials, despite the biometric system being in place in the certification rooms.",
+"recommendation": "Establish a dedicated strong room for examination materials",
+"responsibleOfficer": "DASS",
+"priorResponse": ""
+},
+{
+"id": "PR013",
+"campus": "DSM",
+"sourceRef": "4.5.1",
+"area": "Teaching and Learning Facilities (previous audit)",
+"issue": "Seventeen (17) classrooms (B1-7, B2-7, B3-7, Coffee Room, T1, T2, T3, T4, LB2-3, LB2-2, LME, LMF, LMG, LMH and others) still lack projectors.",
+"recommendation": "Procurement Management Unit to re-advertise the projector tender as a matter of urgency",
+"responsibleOfficer": "HPMU/ICT Manager",
+"priorResponse": "Supplier failed to deliver the required 17 projectors and related accessories as required. The tender will be re-advertised in this June 2026. The new tender will be uploaded to NeST before 12th June 2026."
+},
+{
+"id": "PR014",
+"campus": "DSM",
+"sourceRef": "4.5.2",
+"area": "Biometric Attendance system (previous audit)",
+"issue": "Delay in the implementation of the classroom biometric attendance system.",
+"recommendation": "Expedite the implementation of the classroom biometric attendance system",
+"responsibleOfficer": "ICT Manager",
+"priorResponse": ""
+},
+{
+"id": "PR015",
+"campus": "DSM",
+"sourceRef": "4.5.3",
+"area": "Validity of Curricula in Use (previous audit)",
+"issue": "Expired curricula in use for four (4) Master's programmes (MBA Finance and Banking, MBA HRM, MBA Marketing, and Marketing in Tourism and Events Management).",
+"recommendation": "Expedite the review of expired curricula",
+"responsibleOfficer": "DAC",
+"priorResponse": "The curricula have been reviewed and submitted to NACTVET for validation"
+},
+{
+"id": "PR016",
+"campus": "DSM",
+"sourceRef": "4.5.4",
+"area": "Grading of Master's Degree Dissertations (previous audit)",
+"issue": "Dissertation score discrepancy between examiners, with one case scored 20.5 percent by the external examiner against 83 percent by the internal examiner (2nd Quarter audit).",
+"recommendation": "Introduce third marking where significant discrepancies occur to strengthen fairness and reliability of dissertation assessment.",
+"responsibleOfficer": "DAC",
+"priorResponse": "Third marking will be enforced subject to revision of the postgraduate guidelines"
+},
+{
+"id": "PR017",
+"campus": "Dodoma",
+"sourceRef": "4.1.1",
+"area": "Deposit of dissertations in College repository",
+"issue": "All dissertations of the 2024/2025 academic year were not deposited in the College repository.",
+"recommendation": "Conduct capacity-building training for librarian staff and ensure timely deposit of all dissertations.",
+"responsibleOfficer": "Head of Library Services",
+"priorResponse": "Campus management has noted and sent a reminder letter to the Director of Library Services regarding capacity-building training."
+},
+{
+"id": "PR018",
+"campus": "Dodoma",
+"sourceRef": "4.1.2",
+"area": "Submission of dissertations to departments and Library",
+"issue": "Six (6) dissertations had not yet been submitted to the respective departments and Library unit.",
+"recommendation": "Introduce a mandatory requirement for postgraduate candidates to submit their thesis report before the graduation date, both softcopy and hardcopy.",
+"responsibleOfficer": "HU&P; HODs",
+"priorResponse": "Received for implementation."
+},
+{
+"id": "PR019",
+"campus": "Dodoma",
+"sourceRef": "4.1.3",
+"area": "Plagiarism and AI reports",
+"issue": "Two (2) out of 81 dissertations had no plagiarism and AI reports.",
+"recommendation": "Plagiarism and AI checks should be mandatory for all dissertation content before acceptance.",
+"responsibleOfficer": "HU&P; HODs",
+"priorResponse": "Campus management has noted."
+},
+{
+"id": "PR020",
+"campus": "Dodoma",
+"sourceRef": "4.1.4",
+"area": "Handling and documentation of examiner reports",
+"issue": "Inadequate handling and documentation of examiners' reports was observed.",
+"recommendation": "The HU&P unit should establish mechanisms to maintain records of examiners' reports to ensure compliance with quality assurance.",
+"responsibleOfficer": "HU&P",
+"priorResponse": "Noted for implementation."
+},
+{
+"id": "PR021",
+"campus": "Dodoma",
+"sourceRef": "4.2.1",
+"area": "Examination moderation documentation",
+"issue": "Evidence of moderation was not consistently documented and maintained for all modules.",
+"recommendation": "Establish tracking mechanisms to ensure that all examined modules undergo moderation and that records are properly documented and maintained.",
+"responsibleOfficer": "HODs",
+"priorResponse": "Noted for implementation."
+},
+{
+"id": "PR022",
+"campus": "Dodoma",
+"sourceRef": "4.2.2",
+"area": "Moderator workload",
+"issue": "Six (6) moderators from the Accountancy, Marketing, ICT, BA and Procurement departments exceeded the 20-module threshold (Mr. Ismail Juma 51, Dr. Betty Begashe 41, Dr. Gilbert Mapunda 33, Dr. Mashala Lameck Yusuph 31, Ms. Hamida Khalifa Rashidy 26, Dr. Emmanuel Simanjilo 21).",
+"recommendation": "HODs should solicit sufficient external moderators, discipline-wise, to maintain manageable workloads. The Examination Regulations Guidelines should be reviewed to include a defined workload threshold. Senior academic staff should be permitted to moderate modules taught by junior academic staff.",
+"responsibleOfficer": "HODs; DAC",
+"priorResponse": "Recommendation well noted. Campus management will enforce compliance. However, the College guidelines do not currently indicate a module threshold."
+},
+{
+"id": "PR023",
+"campus": "Dodoma",
+"sourceRef": "4.2.3",
+"area": "Incorporation of External Examiners' scores into COSIS",
+"issue": "Nine (9) modules' marks involving 10 students (3 from BA, 4 from PSM, 1 from Accountancy, 2 from Marketing) were not incorporated into COSIS. Out of 248 modules examined by external examiners, 245 modules' marks were incorporated.",
+"recommendation": "HODs should review and update the records of the 10 affected students. Future DAEC meetings should include cross-checking of external examiners' scores per module.",
+"responsibleOfficer": "HODs",
+"priorResponse": "HODs to continuously remind module instructors to incorporate external examiners' scores before DAEC meetings. Received for implementation."
+},
+{
+"id": "PR024",
+"campus": "Dodoma",
+"sourceRef": "4.3.1",
+"area": "LMS (Moodle) uploads",
+"issue": "26 out of 30 instructors (87%) have uploaded course outlines and assessment plans to LMS (Moodle); 4 instructors have not.",
+"recommendation": "Achieve 100% upload of course outlines and assessment plans to LMS.",
+"responsibleOfficer": "LMS Coordinator; HODs",
+"priorResponse": "Campus management has noted."
+},
+{
+"id": "PR025",
+"campus": "Dodoma",
+"sourceRef": "4.3.2",
+"area": "Workload compliance",
+"issue": "Two (2) instructors from Accountancy and BA departments exceeded the 6-module ceiling (by 1 module each). Four (4) instructors exceeded 44 hrs/week. Three (3) TFC instructors exceeded 28 hrs. Five (5) TNC instructors exceeded 16 hrs.",
+"recommendation": "HODs should enhance workload planning and monitoring to ensure compliance with institutional workload policies.",
+"responsibleOfficer": "HODs; DAC",
+"priorResponse": "These instructors were assigned March intake modules to reduce the use of part-timers. This will be rectified in future."
+},
+{
+"id": "PR026",
+"campus": "Dodoma",
+"sourceRef": "4.3.3",
+"area": "Module content overlap and naming",
+"issue": "Content for module PSU08209 (Applied Procurement and Supply Chain Management) overlaps with PSU08208 (Procurement Project Management), delivered to the same cohort in the same semester. Also, one module has two different names across programmes (BTCBARAM BAT04211 'Basic Principles of Management' vs BTCBAHR BAT04221 'Basic Principles of Records Management').",
+"recommendation": "DAC office to review the two cases for curriculum consistency.",
+"responsibleOfficer": "DAC",
+"priorResponse": "Noted."
+},
+{
+"id": "PR027",
+"campus": "Dodoma",
+"sourceRef": "4.4.1",
+"area": "Examination printing and photocopying records",
+"issue": "Inconsistencies were observed in recording the exact number of examination papers printed, authorized, collected and distributed.",
+"recommendation": "Establish a standardised examination printing register capturing module code, approved quantity, actual quantity printed, date, authorising officer, and receiving officer.",
+"responsibleOfficer": "Exam Officer",
+"priorResponse": "Campus management will introduce register for record and signing."
+},
+{
+"id": "PR028",
+"campus": "Dodoma",
+"sourceRef": "4.5.1",
+"area": "Implementation of directives (previous audit)",
+"issue": "Several management directives have been implemented and some are in progress across units. While progress has been made, some recommendations remain outstanding.",
+"recommendation": "Establish a centralised tracking system, assign clear responsibility at departmental level, and conduct periodic compliance reviews to ensure timely and full execution of all audit recommendations.",
+"responsibleOfficer": "DAC; HODs",
+"priorResponse": "All issues identified in the previous audit were implemented."
+},
+{
+"id": "PR029",
+"campus": "Dodoma",
+"sourceRef": "3.1.9",
+"area": "Academic Quality of Dissertations",
+"issue": "Assessment of 31 (40%) dissertations reviewed in detail showed generally good quality; however, variations were observed in theoretical integration, methodological rigor and presentation standards.",
+"recommendation": "Dissertation quality assurance through enhanced supervisory support, internal review, and research methodology training should be done regularly.",
+"responsibleOfficer": "HU&P; HODs",
+"priorResponse": "Noted by campus management for implementation"
+},
+{
+"id": "PR030",
+"campus": "Dodoma",
+"sourceRef": "3.1.10",
+"area": "Other issues/deficiencies observed in dissertation management",
+"issue": "Minor inconsistencies were observed in record keeping, documentation completeness, and monitoring of dissertation processes.",
+"recommendation": "Conduct regular internal quality assurance reviews to enhance dissertation management processes. Introduce reviewers for postgraduate dissertation defenses and provide allowances for panel members participating in research proposal and dissertation presentation sessions.",
+"responsibleOfficer": "HU&P; Campus Management",
+"priorResponse": "Recommendation is well received for implementation"
+},
+{
+"id": "PR031",
+"campus": "Dodoma",
+"sourceRef": "3.3.1",
+"area": "Delivery of Modules in the Approved Curriculum",
+"issue": "All modules were delivered as approved by the curriculum. However, isolated cases of compressed teaching schedules and variation in contact-hour adherence were observed, potentially affecting achievement of intended learning outcomes.",
+"recommendation": "Strengthen monitoring of curriculum implementation through periodic teaching progress reviews and ensure all modules achieve full coverage within approved contact hours before examinations are administered.",
+"responsibleOfficer": "DAC; HODs",
+"priorResponse": "Noted"
+},
+{
+"id": "PR032",
+"campus": "Dodoma",
+"sourceRef": "3.3.4",
+"area": "Alignment of Instructor Specialization with Allocated Modules",
+"issue": "Instructors generally align their areas of specialization with the allocated modules.",
+"recommendation": "Management, in collaboration with HODs, should establish a mechanism to identify instructors with additional qualifications listed on their transcript so they can be assigned relevant modules.",
+"responsibleOfficer": "DAC; HODs",
+"priorResponse": "The recommendation was well received by campus management"
+},
+{
+"id": "PR033",
+"campus": "Dodoma",
+"sourceRef": "3.4.2",
+"area": "Verification of Candidate Numbers per Module for EOS I",
+"issue": "Comparison of examination attendance records against registered candidate lists indicated minor discrepancies between enrolled candidates and actual examination attendance. In some cases, examination paper requests appeared to be based on registration figures rather than confirmed sitting candidates.",
+"recommendation": "Introduce final candidate verification procedures before examination paper reproduction to ensure printing quantities reflect actual examination participation.",
+"responsibleOfficer": "Exam Officer; HODs",
+"priorResponse": "Campus management has the use of coursework sheet on establishing total number of candidates due to COSIS issues/instability"
+},
+{
+"id": "PR034",
+"campus": "Dodoma",
+"sourceRef": "3.4.3",
+"area": "Computation of Variance Between Printed Copies and Actual Candidates",
+"issue": "Analysis identified variations between the number of printed examination papers and the actual number of candidates who sat for examinations; excessive variances may indicate inefficiencies in examination resource planning.",
+"recommendation": "Establish acceptable variance thresholds and conduct routine reconciliation immediately after each examination session to improve efficiency and minimize unnecessary printing costs.",
+"responsibleOfficer": "Exam Officer",
+"priorResponse": "Well noted"
+},
+{
+"id": "PR035",
+"campus": "Dodoma",
+"sourceRef": "3.4.4",
+"area": "Identification of Modules with Abnormal Printing Surplus",
+"issue": "Audit review identified instances where examination papers printed significantly exceeded the number of candidates who sat for examinations. The surplus was primarily associated with overestimation of attendance, late registration changes, and absence of systematic reconciliation mechanisms.",
+"recommendation": "Develop module-level monitoring and approval controls for examination printing quantities and require justification for significant surplus printing beyond approved tolerance levels.",
+"responsibleOfficer": "Exam Officer; DAC",
+"priorResponse": "Noted for close follow up"
+},
+{
+"id": "PR036",
+"campus": "Dodoma",
+"sourceRef": "3.4.5",
+"area": "Assessment of Causes of Printing Variance",
+"issue": "Interviews with examination officers, departmental representatives and printing personnel indicated that printing variances were influenced by delayed submission of candidate lists, precautionary overprinting, communication gaps between departments and examination offices, and limited use of real-time enrolment data during planning.",
+"recommendation": "Strengthen coordination among academic departments, examination offices, and printing units through implementation of final candidate confirmation procedures and automated reconciliation using institutional examination management systems.",
+"responsibleOfficer": "Exam Officer; HODs; DAC",
+"priorResponse": "Noted"
+},
+{
+"id": "PR037",
+"campus": "Dodoma",
+"sourceRef": "Annex II",
+"area": "Moderation of NTA Level 9 (Master's) Modules by non-PhD holders",
+"issue": "Non-PhD holder moderators post-moderated NTA Level 9 (Master's) modules: Ms. Hamida Khalifa Rashidy (Lecturer by publication) moderated 4 NTA Level 9 modules and Mr. Ismail Juma CPA (Lecturer by publication) moderated 3 NTA Level 9 modules.",
+"recommendation": "Ensure only appropriately qualified (PhD-holding) moderators are assigned to NTA Level 9 modules; solicit specialised external moderators to address departmental shortfalls.",
+"responsibleOfficer": "HODs; DAC",
+"priorResponse": ""
+},
+{
+"id": "PR038",
+"campus": "DSM",
+"sourceRef": "Q1-1",
+"area": "Course Work Marksheet (1st Quarter, Aug 2025)",
+"issue": "In nine modules all students received identical individual assignment scores; in 16 modules all students received identical group assignment scores; and in 1 module (Investment Analysis and Capital Markets - BBF) some students were awarded negative scores.",
+"recommendation": "Management should discourage the practice of awarding identical scores to all students on an assessment unless there is a clear, documented pedagogical justification, and ensure no student is given a negative score.",
+"responsibleOfficer": "HoDs / Module Instructors",
+"priorResponse": "(i) Respective HoDs issued formal memos to the instructors of the affected modules addressing these irregularities. (ii) CBET scheduled for October 2025 will include a dedicated module on proper assessment practices to reinforce accountability and prevent recurrence."
+},
+{
+"id": "PR039",
+"campus": "DSM",
+"sourceRef": "Q1-2",
+"area": "CoSIS Score Entry Verification (1st Quarter, Aug 2025)",
+"issue": "A few modules had not had their coursework or exam scores uploaded into CoSIS (missing entries), which could delay student results processing if unaddressed.",
+"recommendation": "Prior to approval of semester results, each department should conduct an internal verification audit comparing CoSIS entries to physical marksheets to catch and correct any inconsistencies or omissions.",
+"responsibleOfficer": "HoDs / Departments",
+"priorResponse": "All departments have been directed to immediately upload any assessment scores that were previously missing in CoSIS."
+},
+{
+"id": "PR040",
+"campus": "DSM",
+"sourceRef": "Q1-3",
+"area": "Marksheet Handling (1st Quarter, Aug 2025)",
+"issue": "Physical binding of marksheets is incomplete (still in progress): all NTA Level 4-6 exam marksheets for Semester II have been bound into official record books by the Exams Office, and binding of NTA Level 7-9 marksheets is currently underway.",
+"recommendation": "Departments and Exam Office should bind all physical marksheets by semester (for all NTA levels) to create an official record that protects student assessment records and allows easy retrieval for future reference.",
+"responsibleOfficer": "Departments; Examinations Office",
+"priorResponse": "The process of binding marksheets is ongoing"
+},
+{
+"id": "PR041",
+"campus": "DSM",
+"sourceRef": "Q1-4",
+"area": "Learning Environment (1st Quarter, Aug 2025)",
+"issue": "Facilities in several lecture halls require repair or replacement (Appendix II).",
+"recommendation": "Timely repair and replacement of facilities in lecture halls is highly recommended.",
+"responsibleOfficer": "Estate Officer; ICT Manager",
+"priorResponse": "Some repair and procurement the identified resources/facilities is underway"
+},
+{
+"id": "PR042",
+"campus": "DSM",
+"sourceRef": "Q1-A2.1.1",
+"area": "Learning Environment - Observed Issues (1st Quarter Appendix II)",
+"issue": "Whiteboards in 7 lecture rooms (LMA-LMH) are not suitable for use",
+"recommendation": "Replace 7 faulty whiteboards",
+"responsibleOfficer": "Estate Officer",
+"priorResponse": ""
+},
+{
+"id": "PR043",
+"campus": "DSM",
+"sourceRef": "Q1-A2.1.2",
+"area": "Learning Environment - Observed Issues (1st Quarter Appendix II)",
+"issue": "Projectors in 9 rooms (BTB, BTC, BTD, BTE, BTF, BTG, BTH, LB2/2, LB2/3, LB3/1, LB3/2, LB3/3) are not working due to faulty or missing HDMI cables",
+"recommendation": "Replace all faulty or missing HDMI cables in the affected rooms and ensure projectors are tested for functionality after installation. Establish routine inspections.",
+"responsibleOfficer": "ICT Manager",
+"priorResponse": ""
+},
+{
+"id": "PR044",
+"campus": "DSM",
+"sourceRef": "Q1-A2.1.3",
+"area": "Learning Environment - Observed Issues (1st Quarter Appendix II)",
+"issue": "Projectors absent in 4 tents (Tent 1-4)",
+"recommendation": "Install new projectors in Tent 1-4",
+"responsibleOfficer": "ICT Manager",
+"priorResponse": ""
+},
+{
+"id": "PR045",
+"campus": "DSM",
+"sourceRef": "Q1-A2.1.4",
+"area": "Learning Environment - Observed Issues (1st Quarter Appendix II)",
+"issue": "Projection screens are faulty or absent in 8 venues (BTC, BTD, BTE, BTG, BTH, LB2/2, LB2/3, LB3/1-LB3/3)",
+"recommendation": "Replace all 8 faulty/absent projection screens",
+"responsibleOfficer": "ICT Manager",
+"priorResponse": ""
+},
+{
+"id": "PR046",
+"campus": "DSM",
+"sourceRef": "Q1-A2.1.5",
+"area": "Learning Environment - Observed Issues (1st Quarter Appendix II)",
+"issue": "P/A systems are not functional in five lecture rooms (LB2/1, LB2/2, LB2/3, LB3/1, and LB3/3)",
+"recommendation": "Repair/replace 5 faulty P/A systems",
+"responsibleOfficer": "ICT Manager",
+"priorResponse": ""
+},
+{
+"id": "PR047",
+"campus": "DSM",
+"sourceRef": "Q1-A2.1.6",
+"area": "Learning Environment - Observed Issues (1st Quarter Appendix II)",
+"issue": "Female toilets near the tents are in poor condition, with 6 pits broken, 2 toilets non-functional, and the lighting system not working",
+"recommendation": "Repair 6 pits, restore 2 toilets for people with disabilities, fix lighting system. Establish a routine inspection schedule to maintain functionality of these facilities.",
+"responsibleOfficer": "Estate Officer",
+"priorResponse": ""
+},
+{
+"id": "PR048",
+"campus": "DSM",
+"sourceRef": "Q1-A2.1.7",
+"area": "Learning Environment - Observed Issues (1st Quarter Appendix II)",
+"issue": "Male toilets near the tents are not functioning properly, with sinks and taps out of order and no entrance lighting",
+"recommendation": "Repair all non-functional sinks and taps, and restore entrance lighting to ensure proper hygiene and safety. Establish a routine inspection schedule to maintain functionality of these facilities.",
+"responsibleOfficer": "Estate Officer",
+"priorResponse": ""
+},
+{
+"id": "PR049",
+"campus": "DSM",
+"sourceRef": "Q1-A2.1.8",
+"area": "Learning Environment - Observed Issues (1st Quarter Appendix II)",
+"issue": "The sewage system serving the toilets near the tents requires urgent repair",
+"recommendation": "Undertake immediate repair of the sewage system to restore full functionality. Implement a regular maintenance schedule to ensure safe, sanitary conditions.",
+"responsibleOfficer": "Estate Officer",
+"priorResponse": ""
+},
+{
+"id": "PR050",
+"campus": "DSM",
+"sourceRef": "Q1-A2.1.9",
+"area": "Learning Environment - Observed Issues (1st Quarter Appendix II)",
+"issue": "Floors and ceilings are in poor condition in seven lecture venues (LMA, LME, LMF, LMG, LMH, LB3/1, LB3/2) as well as the Metrology Corridor",
+"recommendation": "Renovate the damaged floors and ceilings in the seven identified venues and the Metrology Corridor",
+"responsibleOfficer": "Estate Officer",
+"priorResponse": ""
+},
+{
+"id": "PR051",
+"campus": "DSM",
+"sourceRef": "Q1-A2.1.10",
+"area": "Learning Environment - Observed Issues (1st Quarter Appendix II)",
+"issue": "20 seats are broken across teaching venues: BTA (1), BTB (1), BTC (3), BTD (2), BTF (2), BTG (1), BTH (6), LB2/3 (1), and LB3/2 (3)",
+"recommendation": "Repair or replace the broken seats in the affected venues before the start of the new academic year. In addition, establish routine inspections of classroom furniture to ensure timely maintenance and sustain adequate seating capacity.",
+"responsibleOfficer": "Estate Officer",
+"priorResponse": ""
+},
+{
+"id": "PR052",
+"campus": "DSM",
+"sourceRef": "Q1-A2.1.11",
+"area": "Learning Environment - Observed Issues (1st Quarter Appendix II)",
+"issue": "Ceiling fans are non-functional/missing in five lecture venues: LB2/1 (3), LB2/2 (3), LB2/3 (3), LB3/1 (5), and LB3/3 (1), totaling 15 units",
+"recommendation": "Repair or install the 15 ceiling fans in the identified venues before the start of the new academic year. A preventive maintenance plan should also be introduced to ensure all ventilation equipment remains functional throughout the semester.",
+"responsibleOfficer": "Estate Officer",
+"priorResponse": ""
+},
+{
+"id": "PR053",
+"campus": "Dodoma",
+"sourceRef": "Q1-2.2.1",
+"area": "Course Work Marksheet (1st Quarter, Aug 2025)",
+"issue": "All coursework marksheets were signed by module instructors; however one course (Customer Service Management) was missing group assignment scores.",
+"recommendation": "HoDs should maintain the practice of verifying coursework marksheet completeness and instructor signatures before acceptance. Management should design the uniform coursework marksheet template which has all four components of continuous assessment.",
+"responsibleOfficer": "HoDs; Campus Management",
+"priorResponse": "Well noted. The management will guide new part-timers on our guidelines and coursework marksheets. Approved templates for continuous assessment are shared with all part-timers through email."
+},
+{
+"id": "PR054",
+"campus": "Dodoma",
+"sourceRef": "Q1-2.2.2",
+"area": "End of Semester Exam Marksheet (1st Quarter, Aug 2025)",
+"issue": "All marksheets were signed on all pages by both internal and external examiner signatures; the uniform marksheet template and per-semester binding were not yet in place.",
+"recommendation": "Management should design the uniform marksheet template which has sections of names, signature and date. All marksheets per semester or academic year should be bound in one book.",
+"responsibleOfficer": "Campus Management; Examination Office",
+"priorResponse": "Well noted. Since this is a corporate issue, we advise that it should be handled centrally and shared across all campuses"
+},
+{
+"id": "PR055",
+"campus": "Dodoma",
+"sourceRef": "Q1-2.2.3",
+"area": "Posting of External Examiners' Scores (1st Quarter, Aug 2025)",
+"issue": "No cases of discrepancies were noted between scores awarded by external examiners and those posted on COSIS.",
+"recommendation": "HoDs should maintain the practice of returning the marksheet to the respective module for cross-checking changes made by external examiners before uploading.",
+"responsibleOfficer": "HoDs",
+"priorResponse": "Well noted"
+},
+{
+"id": "PR056",
+"campus": "Dodoma",
+"sourceRef": "Q1-2.2.4",
+"area": "COSIS Score Entry Verification (1st Quarter, Aug 2025)",
+"issue": "One (1) case of scores available on physical marksheets (module: Basic Store Administration; reg. 02.6334.21.02.2024 = 80 and 02.4136.21.02.2023 = 57) were not uploaded to COSIS due to a system error reported to the programmer.",
+"recommendation": "HoDs should verify and upload all non-uploaded scores. Departmental verification audit of COSIS entries against physical marksheets should be mandatory each semester.",
+"responsibleOfficer": "HoDs",
+"priorResponse": "Well noted"
+},
+{
+"id": "PR057",
+"campus": "Dodoma",
+"sourceRef": "Q1-2.2.5",
+"area": "Marksheet Handling (1st Quarter, Aug 2025)",
+"issue": "All coursework marksheets were submitted to HoDs and all End of Semester II examination marksheets were submitted to HoDs.",
+"recommendation": "HoDs should ensure both coursework and final examination marksheets are submitted and copies are stored in the Examination Office. Departments must bind all physical marksheets per semester for secure access and preservation.",
+"responsibleOfficer": "HoDs; Examination Office",
+"priorResponse": "Well noted"
+},
+{
+"id": "PR058",
+"campus": "Dodoma",
+"sourceRef": "Q1-2.2.7a",
+"area": "Library Services - internet access (1st Quarter, Aug 2025)",
+"issue": "Students lack access to wireless internet in the library. Implication: Limits access to digital resources and e-learning platforms.",
+"recommendation": "Install wireless access points to improve student access to online learning resources.",
+"responsibleOfficer": "Head of Library Services; ICT Manager",
+"priorResponse": "On that day, there were internet problems. The library has internet access points"
+},
+{
+"id": "PR059",
+"campus": "Dodoma",
+"sourceRef": "Q1-2.2.7b",
+"area": "Library Services - staffing (1st Quarter, Aug 2025)",
+"issue": "Shortage of Library staff. Implication: Insufficient staffing reduces efficiency in managing library resources, delays service delivery, hinders user support, and negatively impacts the overall quality of library services.",
+"recommendation": "Recruit additional library staff to enhance resource management, improve service delivery, and strengthen academic support for students and staff.",
+"responsibleOfficer": "Campus Director; Human Resources",
+"priorResponse": "One intern from TAESA has reported, and we are waiting for others as per the campus request."
+}
+]
