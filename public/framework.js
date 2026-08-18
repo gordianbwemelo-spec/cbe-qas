@@ -36,9 +36,9 @@ const SEVERITIES = [
 ];
 
 const STATUSES = [
-  { id: 'C',  label: 'Compliant',           cls: 'st-c',  hint: 'Standard fully met — goes to Section 3.0 Areas of Compliance' },
-  { id: 'PC', label: 'Partially compliant', cls: 'st-pc', hint: 'Standard partly met — goes to Section 4.0 Issues Observed' },
-  { id: 'NC', label: 'Non-compliant',       cls: 'st-nc', hint: 'Standard not met — goes to Section 4.0 Issues Observed' },
+  { id: 'C',  label: 'Compliant',           cls: 'st-c',  hint: 'Standard fully met — listed in Section 3.0 Areas of Strength' },
+  { id: 'PC', label: 'Partially compliant', cls: 'st-pc', hint: 'Standard partly met — reported in Section 4.0 with its extent and affected items' },
+  { id: 'NC', label: 'Non-compliant',       cls: 'st-nc', hint: 'Standard not met — reported in Section 4.0 with its extent and affected items' },
   { id: 'NA', label: 'Not applicable',      cls: 'st-na', hint: 'Item does not apply to this campus — justification required' },
   { id: 'NV', label: 'Not verified',        cls: 'st-nv', hint: 'Evidence unavailable — goes to Section 6.0 Limitations' }
 ];

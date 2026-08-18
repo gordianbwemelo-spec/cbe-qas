@@ -206,6 +206,25 @@ function runDerive(item) {
     const r = DERIVE[fname](rows, S.standards, { probes: rec(item.id).probes, item }) || empty();
     if (r.issue) r.issue = r.issue.charAt(0).toUpperCase() + r.issue.slice(1);
     if (r.rec) r.rec = r.rec.charAt(0).toUpperCase() + r.rec.slice(1);
+
+    /* THE EXTENT — the figures that show how big the issue is. Taken from the
+       metrics the analysis flagged, so the report never says "some modules"
+       when it can say "2 of 118". */
+    r.quant = (r.metrics || []).filter(m => m.flag)
+      .map(m => `${m.label}: ${m.value}`).join('; ');
+
+    /* THE AFFECTED ITEMS — named one by one, not summarised. Drawn from the
+       appendix rows the analysis produced (module codes and names, room
+       numbers, departments, programmes, staff names). */
+    if (r.appendix && r.appendix.rows && r.appendix.rows.length) {
+      const cols = r.appendix.cols || [];
+      const skip = /^(#|no\.?|ref)$/i;
+      const keep = cols.map((c, i) => skip.test(String(c).trim()) ? -1 : i).filter(i => i >= 0).slice(0, 2);
+      r.affected = r.appendix.rows.map(row =>
+        keep.map(i => row[i]).filter(v => v !== undefined && v !== null && String(v).trim() !== '')
+            .join(' — ')).filter(Boolean);
+    } else r.affected = [];
+
     return r;
   } catch (e) { console.warn('derive', item.id, e); return empty(); }
 }
@@ -539,8 +558,10 @@ function itemHtml(a, it, n) {
     ${st ? `<div class="help">${esc(st.hint)}</div>` : ''}</div>`;
 
   if (r.status === 'C') {
-    h += `<div class="reveal ok"><div class="revlabel">Recorded in Section 3.0 — Areas of Compliance</div>
-      ${fieldHtml({ label: 'Finding as it will appear in the report', type: 'textarea' }, r.finding, `items.${it.id}.finding`, ro)}
+    h += `<div class="reveal ok"><div class="revlabel">Recorded in Section 3.0 — Areas of Strength</div>
+      ${fieldHtml({ label: 'Strength as it will be listed in the report',
+        help: 'One sentence, stated positively. e.g. "All 118 modules examined were moderated and the reports filed."',
+        type: 'textarea' }, r.finding, `items.${it.id}.finding`, ro)}
       ${fieldHtml({ label: 'Evidence examined / reference', type: 'text' }, r.evidence, `items.${it.id}.evidence`, ro)}</div>`;
   }
   if (r.status === 'PC' || r.status === 'NC') {
@@ -832,6 +853,8 @@ async function actions(act, el) {
         if (def && (r.status === 'NC' || r.status === 'PC')) {
           const d = runDerive(def.item);
           if (!r.issue) r.issue = d.issue; if (!r.rec) r.rec = d.rec;
+          if (!r.quant) r.quant = d.quant;
+          if (!r.affected && d.affected && d.affected.length) r.affected = d.affected.join('\n');
           if (!r.area) r.area = def.item.title;
           if (!r.responsible) r.responsible = def.item.responsible || '';
         }
@@ -842,6 +865,8 @@ async function actions(act, el) {
         const def = itemDef(el.dataset.i); if (!def) return;
         const d = runDerive(def.item), r = rec(el.dataset.i);
         r.issue = d.issue; if (!r.rec) r.rec = d.rec;
+        r.quant = d.quant;
+        if (d.affected && d.affected.length) r.affected = d.affected.join('\n');
         saveItem(el.dataset.i); render(); return;
       }
       case 'setFU': {

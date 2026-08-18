@@ -192,13 +192,20 @@ await step('fill the remaining findings', async () => {
 await step('report builds with every section', async () => {
   await mgr.click('[data-go="report"]'); await mgr.waitForTimeout(1200);
   const t = await mgr.textContent('#docPreview');
-  for (const s of ['1.0 Introduction', '2.0 Methodology', '3.0 Areas of Compliance',
+  for (const s of ['1.0 Introduction', '2.0 Methodology', '3.0 Areas of Strength',
     '4.0 Issues Observed', '5.0 Implementation of the Fourth Quarter', '6.0 Limitations',
     '7.0 Way Forward', 'Appendix 1'])
     if (!t.includes(s)) throw new Error('missing ' + s);
   const st = await mgr.evaluate(() => buildReport().stats);
   console.log('       stats:', JSON.stringify(st));
   if (st.issues < 6) throw new Error('too few issues: ' + st.issues);
+  // every issue must be quantified and its affected items named
+  const bad = await mgr.evaluate(() => buildReport().allIssues
+    .filter(i => !(i.quant || '').trim() || !(i.affected || '').trim())
+    .map(i => i.ref + ' ' + i.area));
+  if (bad.length) throw new Error('issues without extent or affected items: ' + bad.join(', '));
+  if (!t.includes('Extent:')) throw new Error('extent not printed in the report');
+  if (!t.includes('Affected:')) throw new Error('affected items not printed in the report');
 });
 await mgr.screenshot({ path: OUT + '/report.png' });
 

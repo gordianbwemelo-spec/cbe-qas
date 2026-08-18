@@ -20,7 +20,7 @@ function buildReport(state) {
   try {
     const c = CAMPUSES.find(x => x.id === st.session.campus)
       || { name: st.session.campus || '—', full: (st.session.campus || '') + ' CAMPUS' };
-    const R = { campus: c, session: st.session, compliance: [], issues: [], followUp: [],
+    const R = { campus: c, session: st.session, strengths: [], issues: [], followUp: [],
       limitations: [], appendices: [], notApplicable: [], stats: {}, refMap: {} };
     let secC = 0, secI = 0;
     activeAspects().forEach(a => {
@@ -29,17 +29,25 @@ function buildReport(state) {
       activeItems(a).forEach(it => {
         const r = st.items[it.id]; if (!r || !r.status) return;
         if (r.status === 'C') comp.push({ tested: it.title, finding: r.finding || it.standard, evidence: r.evidence || '' });
-        else if (r.status === 'PC' || r.status === 'NC')
+        else if (r.status === 'PC' || r.status === 'NC') {
+          /* If the auditor did not type an extent or list the affected items,
+             fall back to the figures the analysis computed from the evidence
+             sheet — so a finding is never reported without its magnitude. */
+          const d = runDerive(it);
+          const affected = (r.affected || '').trim()
+            || ((d.affected && d.affected.length) ? d.affected.join('\n') : '');
           iss.push({ itemId: it.id, area: r.area || it.title, issue: r.issue || '', rec: r.rec || '',
             responsible: respName(r, it), severity: r.severity || '', target: r.target || '',
-            rootCause: r.rootCause || '', status: r.status, evidence: r.evidence || '' });
+            rootCause: r.rootCause || '', status: r.status, evidence: r.evidence || '',
+            quant: (r.quant || '').trim() || d.quant || '', affected });
+        }
         else if (r.status === 'NA') R.notApplicable.push({ area: it.title, reason: r.na || '' });
         else if (r.status === 'NV') R.limitations.push({ area: it.title, reason: r.nv || '' });
         const d = runDerive(it);
         if (d.appendix && d.appendix.rows && d.appendix.rows.length && (r.status === 'NC' || r.status === 'PC')
             && !R.appendices.some(x => x.title === d.appendix.title)) R.appendices.push(d.appendix);
       });
-      if (comp.length) { secC++; R.compliance.push({ ref: `3.${secC}`, area: a.short, title: a.title, rows: comp }); }
+      if (comp.length) { secC++; R.strengths.push({ ref: `3.${secC}`, area: a.short, title: a.title, rows: comp }); }
       if (iss.length) {
         secI++;
         const rows = iss.map((x, i) => ({ ...x, ref: `4.${secI}.${i + 1}` }));
@@ -95,7 +103,7 @@ function viewReport() {
     <p class="muted">Built from the data captured. Everything below appears in the Word, PDF and Excel versions.</p>
     <div class="kpi" style="margin:12px 0">
       <div class="k"><b>${R.stats.itemsRecorded}</b><span>Items assessed</span></div>
-      <div class="k ok"><b>${R.stats.compliant}</b><span>Compliant</span></div>
+      <div class="k ok"><b>${R.stats.compliant}</b><span>Strengths</span></div>
       <div class="k bad"><b>${R.stats.issues}</b><span>Issues raised</span></div>
       <div class="k warn"><b>${R.stats.high}</b><span>High severity</span></div>
       <div class="k"><b>${R.stats.fuImplemented}/${R.stats.fuTotal}</b><span>Q4 implemented</span></div>
@@ -123,12 +131,16 @@ function validate() {
   FRAMEWORK.forEach(a => (a.items || []).forEach(it => {
     const r = S.items[it.id]; if (!r || !r.status) return;
     const ref = `${a.code}. ${it.title}`;
-    if (r.status === 'C' && !(r.finding || '').trim()) out.push(`${ref} — compliance finding not stated`);
+    if (r.status === 'C' && !(r.finding || '').trim()) out.push(`${ref} — strength not stated`);
     if (r.status === 'NC' || r.status === 'PC') {
       if (!(r.issue || '').trim()) out.push(`${ref} — issue not described`);
       if (!(r.rec || '').trim()) out.push(`${ref} — recommendation missing`);
       if (!(r.responsible || it.responsible)) out.push(`${ref} — responsible officer not assigned`);
       if (!(r.severity || '').trim()) out.push(`${ref} — severity not classified`);
+      const d = runDerive(it);
+      if (!(r.quant || '').trim() && !d.quant) out.push(`${ref} — extent not quantified`);
+      if (!(r.affected || '').trim() && !(d.affected && d.affected.length))
+        out.push(`${ref} — affected items not listed`);
     }
     if (r.status === 'NA' && !(r.na || '').trim()) out.push(`${ref} — justification missing`);
     if (r.status === 'NV' && !(r.nv || '').trim()) out.push(`${ref} — reason for non-verification missing`);
@@ -139,6 +151,17 @@ function validate() {
       out.push(`Follow-up ${p.sourceRef} — reason for non-implementation missing`);
   });
   return out;
+}
+
+/* The affected items, one per line, as a numbered list so nothing is vague. */
+function affectedHtml(s) {
+  const items = String(s || '').split('\n').map(x => x.trim()).filter(Boolean);
+  if (!items.length) return '';
+  return '<ol style="margin:2px 0 0;padding-left:18px">' +
+    items.map(x => `<li>${esc(x)}</li>`).join('') + '</ol>';
+}
+function affectedLines(s) {
+  return String(s || '').split('\n').map(x => x.trim()).filter(Boolean);
 }
 
 function listSentence(a) {
@@ -170,9 +193,9 @@ function reportHtml(R) {
   <p>This report presents the findings of the Quality Assurance Audit conducted at ${esc(c.name)} Campus from
   ${esc(dateRange())}. The audit assessed compliance with institutional policies and quality standards in
   ${esc(listSentence(activeAspects().map(a => a.noun || a.short.toLowerCase())))}.</p>
-  <p>The report is organised as follows: Section 3.0 lists the areas in which the audit confirmed compliance;
-  Section 4.0 tabulates the issues observed, the recommendations and the responsible officer, together with the
-  Management Response recorded in the Quality Audit System; Section 5.0 reports the implementation status of the
+  <p>The report is organised as follows: Section 3.0 lists the areas of strength;
+  Section 4.0 tabulates each issue observed with its extent and the specific items affected, the recommendation
+  and the responsible officer, together with the Management Response recorded in the Quality Audit System; Section 5.0 reports the implementation status of the
   recommendations issued in the Fourth Quarter audit of the 2025/2026 academic year; Section 6.0 sets out the
   limitations of the audit; and Section 7.0 sets out the way forward. Supporting evidence is provided in the Appendices.</p>`;
   if (s.team) h += `<p>The audit was conducted by ${esc(s.team)}${s.leadAuditor ? `, led by ${esc(s.leadAuditor)}` : ''}.</p>`;
@@ -189,16 +212,15 @@ function reportHtml(R) {
     objectives, methodology and expected deliverables, and an exit meeting was held on
     ${esc(fmtDate(S.general.exitDate) || 'the final day of the audit')} to present the findings to Management.</p>`;
 
-  h += `<h2>3.0 Areas of Compliance</h2>`;
-  if (!R.compliance.length) h += `<p>No item was assessed as fully compliant in this audit cycle.</p>`;
+  h += `<h2>3.0 Areas of Strength</h2>`;
+  if (!R.strengths.length) h += `<p>No area was assessed as meeting the standard in full in this audit cycle.</p>`;
   else {
-    h += `<p>The audit confirmed compliance in the areas listed below.</p>
-    <table><thead><tr><th style="width:7%">Ref.</th><th style="width:20%">Audit Area</th>
-      <th style="width:26%">Audit Item Tested</th><th>Audit Finding (Compliant)</th></tr></thead><tbody>`;
-    R.compliance.forEach(g => g.rows.forEach((r, i) =>
-      h += `<tr>${i === 0 ? `<td rowspan="${g.rows.length}"><b>${g.ref}</b></td><td rowspan="${g.rows.length}">${esc(g.area)}</td>` : ''}
-        <td>${esc(r.tested)}</td><td>${nl2br(r.finding)}</td></tr>`));
-    h += `</tbody></table>`;
+    h += `<p>The audit established the following areas of strength.</p>`;
+    R.strengths.forEach(g => {
+      h += `<h3>${g.ref} ${esc(g.title)}</h3><ol class="roman" type="i">`;
+      g.rows.forEach(r => h += `<li>${nl2br(r.finding)}</li>`);
+      h += `</ol>`;
+    });
   }
 
   h += `<h2>4.0 Issues Observed and Recommendations</h2>`;
@@ -212,7 +234,11 @@ function reportHtml(R) {
       h += `<tr><td colspan="6" style="background:#f0f3f8"><b>${g.ref} ${esc(g.title)}</b></td></tr>`;
       g.rows.forEach(r => {
         const rp = resp(r.ref);
-        h += `<tr><td><b>${r.ref}</b></td><td>${esc(r.area)}</td><td>${nl2br(r.issue)}</td><td>${nl2br(r.rec)}</td>
+        h += `<tr><td><b>${r.ref}</b></td><td>${esc(r.area)}</td>
+          <td>${nl2br(r.issue)}
+            ${r.quant ? `<div style="margin-top:6px"><b>Extent:</b> ${nl2br(r.quant)}</div>` : ''}
+            ${r.affected ? `<div style="margin-top:6px"><b>Affected:</b><br>${affectedHtml(r.affected)}</div>` : ''}</td>
+          <td>${nl2br(r.rec)}</td>
           <td>${esc(r.responsible)}</td><td class="blank">${rp.response ? nl2br(rp.response) +
             `<div style="font-size:10px;color:#555;margin-top:4px">${esc(rp.status || '')}${rp.by ? ' — ' + esc(rp.by) : ''}${rp.date ? ', ' + esc(fmtDate(rp.date)) : ''}</div>` : ''}</td></tr>`;
       });
@@ -381,7 +407,7 @@ function exportDocx(R) {
 
   H('1.0 Introduction');
   P(`This report presents the findings of the Quality Assurance Audit conducted at ${c.name} Campus from ${dateRange()}. The audit assessed compliance with institutional policies and quality standards in ${listSentence(activeAspects().map(a => a.noun || a.short.toLowerCase()))}.`, { align: 'both' });
-  P('The report is organised as follows: Section 3.0 lists the areas in which the audit confirmed compliance; Section 4.0 tabulates the issues observed, the recommendations and the responsible officer, together with the Management Response recorded in the Quality Audit System; Section 5.0 reports the implementation status of the recommendations issued in the Fourth Quarter audit of the 2025/2026 academic year; Section 6.0 sets out the limitations of the audit; and Section 7.0 sets out the way forward. Supporting evidence is provided in the Appendices.', { align: 'both' });
+  P('The report is organised as follows: Section 3.0 lists the areas of strength; Section 4.0 tabulates each issue observed with its extent and the specific items affected, the recommendation and the responsible officer, together with the Management Response recorded in the Quality Audit System; Section 5.0 reports the implementation status of the recommendations issued in the Fourth Quarter audit of the 2025/2026 academic year; Section 6.0 sets out the limitations of the audit; and Section 7.0 sets out the way forward. Supporting evidence is provided in the Appendices.', { align: 'both' });
   if (s.team) P(`The audit was conducted by ${s.team}${s.leadAuditor ? `, led by ${s.leadAuditor}` : ''}.`, { align: 'both' });
 
   H('2.0 Methodology');
@@ -390,13 +416,15 @@ function exportDocx(R) {
   if (S.general.entranceDate || S.general.exitDate)
     P(`An entrance meeting was held on ${fmtDate(S.general.entranceDate) || 'the first day of the audit'} to introduce the scope, objectives, methodology and expected deliverables, and an exit meeting was held on ${fmtDate(S.general.exitDate) || 'the final day of the audit'} to present the findings to Management.`, { align: 'both' });
 
-  H('3.0 Areas of Compliance');
-  if (!R.compliance.length) P('No item was assessed as fully compliant in this audit cycle.', {});
+  H('3.0 Areas of Strength');
+  if (!R.strengths.length) P('No area was assessed as meeting the standard in full in this audit cycle.', {});
   else {
-    P('The audit confirmed compliance in the areas listed below.', { align: 'both' });
-    const rows = [['Ref.', 'Audit Area', 'Audit Item Tested', 'Audit Finding (Compliant)']];
-    R.compliance.forEach(g => g.rows.forEach((r, i) => rows.push([i === 0 ? g.ref : '', i === 0 ? g.area : '', r.tested, r.finding])));
-    b += wTable(rows, [720, 1900, 2400, 4340], { total: W });
+    P('The audit established the following areas of strength.', { align: 'both' });
+    const rom = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii', 'xiii', 'xiv', 'xv'];
+    R.strengths.forEach(g => {
+      P(`${g.ref} ${g.title}`, { b: true, size: 11 });
+      g.rows.forEach((r, i) => P(`(${rom[i] || i + 1})\t${r.finding}`, { align: 'both', indent: 567, hanging: 340 }));
+    });
   }
 
   H('4.0 Issues Observed and Recommendations');
@@ -408,11 +436,17 @@ function exportDocx(R) {
       rows.push([{ text: `${g.ref} ${g.title}`, b: true, span: 6, fill: 'EDF0F5' }]);
       g.rows.forEach(r => {
         const rp = resp(r.ref);
-        rows.push([{ text: r.ref, b: true }, r.area, r.issue, r.rec, r.responsible,
+        const cell = [r.issue];
+        if (r.quant) cell.push('Extent: ' + r.quant);
+        if (r.affected) {
+          cell.push('Affected:');
+          affectedLines(r.affected).forEach((x, i) => cell.push(`${i + 1}. ${x}`));
+        }
+        rows.push([{ text: r.ref, b: true }, r.area, cell, r.rec, r.responsible,
           rp.response ? `${rp.response}\n${[rp.status, rp.by, rp.date ? fmtDate(rp.date) : ''].filter(Boolean).join(' — ')}` : '']);
       });
     });
-    b += wTable(rows, [700, 1450, 2350, 2100, 1300, 1460], { total: W, size: 8 });
+    b += wTable(rows, [640, 1250, 2950, 1950, 1180, 1390], { total: W, size: 8 });
   }
 
   H('5.0 Implementation of the Fourth Quarter Audit Recommendations');
@@ -500,16 +534,19 @@ function exportMemos(R) {
 /* ------------------------------ EXCEL ------------------------------------ */
 function exportXlsx(R) {
   const c = R.campus;
-  const issues = [['#', 'Campus', 'Audit Aspect', 'Audit Area', 'Issue Observed', 'Recommendation', 'Responsible Officer',
-    'Severity', 'Root Cause', 'Target Date', 'Status', 'Management Response', 'Response Status', 'Responded By', 'Date Responded']];
+  const issues = [['#', 'Campus', 'Audit Aspect', 'Audit Area', 'Issue Observed', 'Extent (quantified)',
+    'Affected Items', 'Recommendation', 'Responsible Officer', 'Severity', 'Root Cause', 'Target Date', 'Status',
+    'Management Response', 'Response Status', 'Responded By', 'Date Responded']];
   R.issues.forEach(g => g.rows.forEach(r => {
     const rp = S.responses[r.ref] || {};
-    issues.push([r.ref, c.name, g.title, r.area, r.issue, r.rec, r.responsible, r.severity, r.rootCause,
+    issues.push([r.ref, c.name, g.title, r.area, r.issue, r.quant,
+      affectedLines(r.affected).map((x, i) => `${i + 1}. ${x}`).join('\n'),
+      r.rec, r.responsible, r.severity, r.rootCause,
       r.target ? fmtDate(r.target) : '', r.status === 'NC' ? 'Non-compliant' : 'Partially compliant',
       rp.response || '', rp.status || 'Awaiting response', rp.by || '', rp.date ? fmtDate(rp.date) : '']);
   }));
-  const comp = [['Ref.', 'Audit Area', 'Audit Item Tested', 'Finding', 'Evidence']];
-  R.compliance.forEach(g => g.rows.forEach(r => comp.push([g.ref, g.area, r.tested, r.finding, r.evidence])));
+  const comp = [['Ref.', 'Audit Area', 'Item Assessed', 'Strength Established', 'Evidence']];
+  R.strengths.forEach(g => g.rows.forEach(r => comp.push([g.ref, g.area, r.tested, r.finding, r.evidence])));
   const fu = [['#', 'Q4 Ref.', 'Audit Area', 'Recommendation', 'Responsible Officer', 'Implementation Status',
     'Evidence', 'Reason Outstanding', 'Revised Target', 'Re-issued?', 'Remarks']];
   R.followUp.forEach(f => fu.push([f.ref, f.sourceRef, f.area, f.recommendation, f.responsible, f.status,
@@ -518,7 +555,7 @@ function exportXlsx(R) {
     ['Campus', c.name], ['Audit dates', dateRange()], ['Lead auditor', R.session.leadAuditor],
     ['Audit team', R.session.team], ['Report issued', S.issuedAt ? fmtDate(S.issuedAt.slice(0, 10)) : 'Not yet issued'],
     ['Generated', new Date().toLocaleString('en-GB')], ['', ''],
-    ['Items assessed', R.stats.itemsRecorded], ['Assessed compliant', R.stats.compliant],
+    ['Items assessed', R.stats.itemsRecorded], ['Strengths established', R.stats.compliant],
     ['Issues raised', R.stats.issues], ['— non-compliant', R.stats.nc], ['— partially compliant', R.stats.pc],
     ['High severity issues', R.stats.high], ['Responses received', R.stats.responded],
     ['Items not verified', R.limitations.length],
@@ -526,8 +563,8 @@ function exportXlsx(R) {
     ['— not implemented', R.stats.fuNot]];
   const sheets = [
     { name: 'Summary', rows: summary, widths: [42, 60] },
-    { name: 'Issues Tracker', rows: issues, freeze: 1, widths: [8, 12, 26, 24, 60, 55, 22, 14, 20, 14, 16, 45, 18, 18, 14] },
-    { name: 'Compliance', rows: comp, freeze: 1, widths: [8, 24, 34, 60, 30] },
+    { name: 'Issues Tracker', rows: issues, freeze: 1, widths: [8, 12, 26, 24, 55, 30, 40, 50, 22, 14, 20, 14, 16, 45, 18, 18, 14] },
+    { name: 'Strengths', rows: comp, freeze: 1, widths: [8, 24, 34, 60, 30] },
     { name: 'Q4 Follow-up', rows: fu, freeze: 1, widths: [8, 10, 24, 55, 22, 20, 40, 34, 15, 22, 34] }
   ];
   R.appendices.forEach((ap, i) => sheets.push({ name: ('Appx ' + (i + 1) + ' ' + ap.title).substring(0, 31),
@@ -664,7 +701,7 @@ function viewConsolidate() {
       <button class="btn sec" data-act="consolXlsx">Consolidated tracker (.xlsx)</button>
     </div>
     <table class="plain"><thead><tr><th>Indicator</th>${CONSOL.map(x => `<th>${esc(x.R.campus.name)}</th>`).join('')}</tr></thead><tbody>
-    ${[['Items assessed', 'itemsRecorded'], ['Assessed compliant', 'compliant'], ['Issues raised', 'issues'],
+    ${[['Items assessed', 'itemsRecorded'], ['Strengths established', 'compliant'], ['Issues raised', 'issues'],
        ['High severity', 'high'], ['Responses received', 'responded'], ['Q4 recommendations', 'fuTotal'],
        ['Q4 implemented', 'fuImplemented'], ['Q4 not implemented', 'fuNot']]
       .map(([lab, k]) => `<tr><td>${lab}</td>${CONSOL.map(x => `<td>${x.R.stats[k]}</td>`).join('')}</tr>`).join('')}
@@ -692,7 +729,7 @@ function consolidateXlsx() {
       r.target ? fmtDate(r.target) : '', rp.response || '', rp.status || 'Awaiting response']);
   })));
   const cmp = [['Metric'].concat(CONSOL.map(x => x.R.campus.name))];
-  [['Items assessed', 'itemsRecorded'], ['Assessed compliant', 'compliant'], ['Issues raised', 'issues'],
+  [['Items assessed', 'itemsRecorded'], ['Strengths established', 'compliant'], ['Issues raised', 'issues'],
    ['High severity', 'high'], ['Non-compliant', 'nc'], ['Partially compliant', 'pc'], ['Responses received', 'responded'],
    ['Q4 recommendations', 'fuTotal'], ['Q4 implemented', 'fuImplemented'], ['Q4 not implemented', 'fuNot']]
     .forEach(([lab, k]) => cmp.push([lab].concat(CONSOL.map(x => x.R.stats[k]))));
@@ -721,7 +758,7 @@ function consolidateDocx() {
 
   P('2.0 Comparative Position', { style: 'Heading1', b: true, size: 13 });
   const rows = [['Indicator'].concat(CONSOL.map(x => x.R.campus.name))];
-  [['Items assessed', 'itemsRecorded'], ['Assessed compliant', 'compliant'], ['Issues raised', 'issues'],
+  [['Items assessed', 'itemsRecorded'], ['Strengths established', 'compliant'], ['Issues raised', 'issues'],
    ['— of which high severity', 'high'], ['Management responses received', 'responded'],
    ['Q4 recommendations followed up', 'fuTotal'], ['— fully implemented', 'fuImplemented'], ['— not implemented', 'fuNot']]
     .forEach(([lab, k]) => rows.push([lab].concat(CONSOL.map(x => String(x.R.stats[k])))));
