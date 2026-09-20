@@ -133,6 +133,11 @@ table.dg td.rm{width:30px;text-align:center}
 table.dg td.calcell{padding:6px 8px;background:#f4f6fa;color:#3b4657;font-weight:600;
   text-align:right;font-variant-numeric:tabular-nums}
 table.dg td.calcell.bad{background:#fdeef1;color:#a3223a}
+/* Fills itself in, but the auditor may type over it. */
+table.dg td input.autocell{background:#f4f6fa;font-weight:600;text-align:right;
+  font-variant-numeric:tabular-nums}
+table.dg td input.autocell::placeholder{font-weight:400;color:#98a2b3}
+table.dg td input.autocell.bad{background:#fdeef1;color:#a3223a}
 .xbtn{border:0;background:transparent;color:#b3bcca;cursor:pointer;font-size:15px;line-height:1;padding:4px 6px}
 .xbtn:hover{color:var(--bad)}
 
@@ -239,3 +244,8 @@ h4.signgrp:first-of-type{margin-top:0}
 .idcard b{display:block;font-size:14px;font-weight:600;color:var(--ink)}
 .idcard span{display:block;font-size:12px;color:var(--ink-2);margin-top:2px}
 .confirmrow{margin-top:22px;border-top:1px solid var(--line);padding-top:20px}
+
+/* Shown when a browser is running a copy of the program older than the server's. */
+.stalebar{background:var(--bad);color:#fff;padding:9px 18px;font-size:13px;display:flex;
+  align-items:center;gap:10px;flex-wrap:wrap}
+.stalebar .btn{background:#fff;color:var(--bad);font-weight:700}

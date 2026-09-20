@@ -118,11 +118,15 @@ const FRAMEWORK = [
           {k:'name',    label:'Module name',        type:'text',   w:210},
           {k:'cand',    label:'Scripts sat',        type:'number', w:120},
           {k:'scripts', label:'Scripts moderated',  type:'number', w:150},
-          {k:'pct',     label:'% moderated',        type:'calc',   w:130,
+          /* Typed directly when that is all the auditor has, and worked out
+             automatically the moment both counts are present. Typing in it
+             stops the automatic fill; clearing it starts again. */
+          {k:'pct',     label:'% moderated',        type:'auto',   w:140,
+            from: ['cand', 'scripts'],
             calc: r => { const c = parseFloat(r.cand), s = parseFloat(r.scripts);
-              return (!c || isNaN(c) || isNaN(s)) ? '—' : (s / c * 100).toFixed(1) + '%'; },
-            warn: (r, S) => { const c = parseFloat(r.cand), s = parseFloat(r.scripts);
-              return !!c && !isNaN(s) && (s / c * 100) < (S ? S.sampleSizePct : 20); }},
+              return (!c || isNaN(c) || isNaN(s)) ? '' : (s / c * 100).toFixed(1); },
+            warn: (r, S) => { const v = parseFloat(r.pct);
+              return !isNaN(v) && v < (S ? S.sampleSizePct : 20); }},
           {k:'modname', label:'Moderator',          type:'text',   w:180},
           {k:'remark',  label:'Remarks',            type:'text',   w:180}
         ], derive:'deriveSample' } },

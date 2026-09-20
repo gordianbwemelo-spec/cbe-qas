@@ -348,6 +348,7 @@ async function exportActions(act, el) {
     case 'editWayForward': editWayForward(buildReport()); return;
     case 'issueReport':   await issueReport(); return;
     case 'reopenReport':  await API.post(`/api/audit/${S.auditId}/issue`, { locked: false }); S.locked = false; await loadAudits(); render(); toast('Report reopened for editing.'); return;
+    case 'hardReload':    location.reload(true); return;
     case 'resetAudit':    await resetAudit(); return;
     case 'submitResp':    await submitResponse(el.dataset.ref, el.dataset.aid); return;
     case 'newCode':       await newCode(); return;

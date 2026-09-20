@@ -92,15 +92,37 @@ const saveItem     = id => queueSave('item:' + id, () => API.post(`/api/audit/${
    screen started from. The server can then tell a row someone else added
    from a row this auditor deleted, and merge instead of overwriting. */
 const rowId = () => 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+/* A fingerprint of a row's contents, so the server can tell which side
+   actually changed a row rather than assuming the last save is right. */
+const rowHash = r => {
+  const o = {};
+  Object.keys(r || {}).sort().forEach(k => {
+    if (k === '_id' || k.slice(0, 3) === '_m_') return;
+    o[k] = r[k] == null ? '' : String(r[k]);
+  });
+  return JSON.stringify(o);
+};
 const GRID_BASE = {};
+/* Which cells this screen has actually changed since it last agreed with the
+   server. Sending this lets the server lay only those cells over the current
+   row, instead of replacing a colleague's row wholesale. */
+const GRID_DIRTY = {};
 function setGridBase(gid) {
-  GRID_BASE[gid] = (S.grids[gid] || []).map(r => r && r._id).filter(Boolean);
+  const m = {};
+  (S.grids[gid] || []).forEach(r => { if (r && r._id) m[r._id] = rowHash(r); });
+  GRID_BASE[gid] = m;
+  GRID_DIRTY[gid] = {};
+}
+function markDirty(gid, row, key) {
+  if (!row || !row._id) return;
+  const g = GRID_DIRTY[gid] || (GRID_DIRTY[gid] = {});
+  (g[row._id] || (g[row._id] = {}))[key] = true;
 }
 const saveGrid = gid => queueSave('grid:' + gid, async () => {
   const rows = S.grids[gid] || [];
   rows.forEach(r => { if (r && !r._id) r._id = rowId(); });
-  const base = GRID_BASE[gid] || rows.map(r => r._id);
-  const d = await API.post(`/api/audit/${S.auditId}/grid`, { gridId: gid, rows, baseIds: base });
+  const base = GRID_BASE[gid] || {}, dirty = GRID_DIRTY[gid] || {};
+  const d = await API.post(`/api/audit/${S.auditId}/grid`, { gridId: gid, rows, base, dirty });
   if (d && d.merged && Array.isArray(d.rows)) {
     S.grids[gid] = d.rows;
     const f = document.activeElement;
@@ -129,15 +151,17 @@ function startPolling() {
          the change would never be delivered again, and the next save would
          quietly overwrite it with this screen's stale copy. */
       Object.entries(d.items || {}).forEach(([k, v]) => {
-        if (focusKey.includes(`items.${k}.`)) { held = true; return; }
+        if (focusKey.includes(`items.${k}.`) || pending.has('item:' + k)) { held = true; return; }
         S.items[k] = v; changed = true;
       });
       Object.entries(d.grids || {}).forEach(([k, v]) => {
-        if (focus && focus.dataset && focus.dataset.g === k) { held = true; return; }
+        /* Never swap a sheet out from under an edit that has not been sent
+           yet — the keystroke would be thrown away with the old copy. */
+        if ((focus && focus.dataset && focus.dataset.g === k) || pending.has('grid:' + k)) { held = true; return; }
         S.grids[k] = v; setGridBase(k); changed = true;
       });
       Object.entries(d.followUp || {}).forEach(([k, v]) => {
-        if (focusKey.includes(`followUp.${k}.`)) { held = true; return; }
+        if (focusKey.includes(`followUp.${k}.`) || pending.has('fu:' + k)) { held = true; return; }
         S.followUp[k] = v; changed = true;
       });
       Object.entries(d.responses || {}).forEach(([k, v]) => { S.responses[k] = v; changed = true; });
@@ -155,9 +179,18 @@ function startPolling() {
     } catch (e) { /* offline for a moment; keep going */ }
   }, 7000);
 }
+/* A browser can sit for days on an old copy of the program and then show
+   empty sheets while everyone else sees the data — it is looking for things
+   under names the system no longer uses. The server states which version it
+   is serving; if this screen is running a different one, say so plainly
+   rather than let someone conclude their work has vanished. */
+let SERVER_BUILD = '';
+const staleBuild = () => !!(SERVER_BUILD && window.APP_BUILD && SERVER_BUILD !== window.APP_BUILD);
+
 async function pingPresence() {
   try {
     const d = await API.post('/api/presence', { auditId: S.auditId, screen: UI.screen });
+    if (d && d.build && d.build !== SERVER_BUILD) { SERVER_BUILD = d.build; if (staleBuild()) render(); }
     OTHERS = d.others || [];
     const el = document.getElementById('others');
     if (el) el.innerHTML = OTHERS.length
@@ -277,6 +310,7 @@ async function boot() {
   try {
     const d = await API.get('/api/me');
     ME = d.me; META = { year: d.year, quarter: d.quarter };
+    SERVER_BUILD = d.build || '';
   } catch (e) { ME = null; }
   if (!ME) {
     try { IDENTITIES = (await API.get('/api/roles')).identities || []; } catch (e) { IDENTITIES = []; }
@@ -347,7 +381,10 @@ function shell(inner) {
   const p = overallProgress();
   const c = campusObj();
   const showSide = S.auditId && ME.role !== 'office';
-  return `<div class="top">
+  return `${staleBuild() ? `<div class="stalebar">This page is running an out-of-date copy of the system,
+    so it may not show what your colleagues see. <button class="btn sm" data-act="hardReload">Reload now</button>
+    Nothing you have entered will be lost.</div>` : ''}
+  <div class="top">
     <div class="brand"><b>CBE QUALITY AUDIT SYSTEM</b>
       <span>Quality Assurance Unit · ${esc(META.quarter)} Quarter ${esc(META.year)}</span></div>
     <div class="crumb">
@@ -642,8 +679,22 @@ function itemHtml(a, it, n) {
 const calcVal = (c, row) => { try { const v = c.calc(row, S.standards); return v == null ? '' : v; } catch (e) { return ''; } };
 const calcWarn = (c, row) => { try { return !!(c.warn && c.warn(row, S.standards)); } catch (e) { return false; } };
 
-/* Redraw just the calculated cells of one row, so the figure keeps up with
-   the typing without rebuilding the screen and stealing the cursor. */
+/* An 'auto' column is typed into like any other, but fills itself in from the
+   rest of the row while it has not been typed into. Typing stops the fill;
+   clearing the cell hands it back to the system. */
+const MANUAL = k => '_m_' + k;
+function applyAuto(g, row, changedKey) {
+  (g.cols || []).filter(c => c.type === 'auto').forEach(c => {
+    if (c.k === changedKey) return;
+    if (c.from && !c.from.includes(changedKey)) return;
+    if (row[MANUAL(c.k)]) return;                     // the auditor typed it
+    const v = calcVal(c, row);
+    if (String(row[c.k] == null ? '' : row[c.k]) !== String(v)) row[c.k] = v;
+  });
+}
+
+/* Redraw the worked-out cells of one row, so figures keep up with the typing
+   without rebuilding the screen and stealing the cursor. */
 function refreshCalcCells(gid, i) {
   const g = findGrid(gid); if (!g) return;
   const row = gridRows(gid)[i] || {};
@@ -652,6 +703,15 @@ function refreshCalcCells(gid, i) {
     if (!cell) return;
     cell.textContent = calcVal(c, row);
     cell.classList.toggle('bad', calcWarn(c, row));
+  });
+  g.cols.filter(c => c.type === 'auto').forEach(c => {
+    const el = document.querySelector(`[data-g="${gid}"][data-r="${i}"][data-k="${c.k}"]`);
+    if (!el || el === document.activeElement) return;
+    const v = row[c.k] == null ? '' : row[c.k];
+    if (el.value !== String(v)) el.value = v;
+    el.classList.toggle('bad', calcWarn(c, row));
+    el.title = row[MANUAL(c.k)] ? 'Entered by hand. Clear it to let the system work it out.'
+                                : 'Worked out from the row. Type over it to set your own figure.';
   });
 }
 
@@ -672,6 +732,12 @@ function gridHtml(g, ro) {
          nothing to key in or get wrong. */
       if (c.type === 'calc') return `<td class="calcell${calcWarn(c, row) ? ' bad' : ''}"
         data-calc="${g.id}" data-r="${i}" data-k="${c.k}">${esc(calcVal(c, row))}</td>`;
+      if (c.type === 'auto') return `<td><input type="text" inputmode="decimal"
+        class="autocell${calcWarn(c, row) ? ' bad' : ''}" data-g="${g.id}" data-r="${i}" data-k="${c.k}"
+        value="${esc(v)}" placeholder="auto"
+        title="${row[MANUAL(c.k)] ? 'Entered by hand. Clear it to let the system work it out.'
+                                  : 'Worked out from the row. Type over it to set your own figure.'}"
+        ${ro ? 'disabled' : ''}></td>`;
       if (c.type === 'select') return `<td><select data-g="${g.id}" data-r="${i}" data-k="${c.k}" ${ro ? 'disabled' : ''}><option value=""></option>` +
         c.options.map(o => `<option ${v === o ? 'selected' : ''}>${esc(o)}</option>`).join('') + '</select></td>';
       return `<td><input type="${c.type === 'number' ? 'number' : 'text'}" step="any" data-g="${g.id}" data-r="${i}" data-k="${c.k}" value="${esc(v)}" ${ro ? 'disabled' : ''}></td>`;
@@ -854,7 +920,22 @@ function bindDynamic() {
     const h = () => {
       const rows = gridRows(el.dataset.g), i = +el.dataset.r;
       if (!rows[i]) rows[i] = {};
-      rows[i][el.dataset.k] = el.type === 'number' ? (el.value === '' ? '' : parseFloat(el.value)) : el.value;
+      const g = findGrid(el.dataset.g), k = el.dataset.k;
+      const col = g ? (g.cols || []).find(c => c.k === k) : null;
+      rows[i][k] = el.type === 'number' ? (el.value === '' ? '' : parseFloat(el.value)) : el.value;
+      markDirty(el.dataset.g, rows[i], k);
+      if (col && col.type === 'auto') {
+        /* Typing claims the cell; emptying it gives it back to the system. */
+        if (String(el.value).trim() === '') {
+          delete rows[i][MANUAL(k)];
+          rows[i][k] = calcVal(col, rows[i]);
+        } else rows[i][MANUAL(k)] = true;
+      } else if (g) {
+        const before = JSON.stringify(rows[i]);
+        applyAuto(g, rows[i], k);
+        if (JSON.stringify(rows[i]) !== before)
+          (g.cols || []).filter(c => c.type === 'auto').forEach(c => markDirty(el.dataset.g, rows[i], c.k));
+      }
       saveGrid(el.dataset.g);
       refreshCalcCells(el.dataset.g, i);
     };
@@ -1010,6 +1091,11 @@ function ingestRows(gid, rows) {
         v = m || v;
       }
       r[c.k] = v;
+    });
+    (g.cols || []).filter(c => c.type === 'auto').forEach(c => {
+      /* A figure supplied in the sheet stands; an empty one is worked out. */
+      if (String(r[c.k] == null ? '' : r[c.k]).trim() !== '') r[MANUAL(c.k)] = true;
+      else r[c.k] = calcVal(c, r);
     });
     target.push(r); n++;
   });

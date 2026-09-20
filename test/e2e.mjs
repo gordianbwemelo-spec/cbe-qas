@@ -85,9 +85,10 @@ await step('evidence sheet saves and auto-flags', async () => {
     ingestRows('g_notmod', [
       ['PSC 05104', 'Procurement Principles', '7', 'BPS', 'Procurement', '76', 'Moderator not appointed', '']
     ]);
+    /* the % column is left blank so the system fills it in */
     ingestRows('g_lowsample', [
-      ['ACC 05203', 'Financial Accounting', '98', '12', 'Dr. J. Mushi', ''],
-      ['ICT 06110', 'Database Systems', '22', '3', 'Mr. A. Kimaro', '']
+      ['ACC 05203', 'Financial Accounting', '98', '12', '', 'Dr. J. Mushi', ''],
+      ['ICT 06110', 'Database Systems', '22', '3', '', 'Mr. A. Kimaro', '']
     ]);
     ingestRows('g_modload', [
       ['Dr. J. Mushi', 'CBE DSM', '24', '']
@@ -102,12 +103,28 @@ await step('evidence sheet saves and auto-flags', async () => {
   await mgr.waitForTimeout(1200);
   const n = Number(psql("select jsonb_array_length(rows) from audit_grids where grid_id='g_lowsample'"));
   if (n !== 2) throw new Error('grid not persisted: ' + n);
-  const pctCells = await mgr.evaluate(() => {
+  /* The percentage fills itself in from the counts... */
+  const pctCells = await mgr.evaluate(() => gridRows('g_lowsample').map(r => r.pct));
+  if (pctCells.join(',') !== '12.2,13.6') throw new Error('% not auto-filled: ' + pctCells.join(','));
+  /* ...and can be typed over, after which the counts no longer drive it. */
+  const typed = await mgr.evaluate(async () => {
     const g = findGrid('g_lowsample'), rows = gridRows('g_lowsample');
-    const col = g.cols.find(c => c.type === 'calc');
-    return rows.map(r => col.calc(r, S.standards));
+    const col = g.cols.find(c => c.k === 'pct');
+    rows[0].pct = '9.5'; rows[0]['_m_pct'] = true;     // typed by hand
+    applyAuto(g, rows[0], 'scripts');                   // a count changes
+    const kept = rows[0].pct;
+    rows[1].pct = ''; delete rows[1]['_m_pct'];         // cleared — back to automatic
+    rows[1].pct = calcVal(col, rows[1]);
+    saveGrid('g_lowsample');
+    await new Promise(r => setTimeout(r, 1500));
+    return { kept, auto: rows[1].pct };
   });
-  if (pctCells.join(',') !== '12.2%,13.6%') throw new Error('% moderated wrong: ' + pctCells.join(','));
+  if (typed.kept !== '9.5') throw new Error('a typed percentage was overwritten: ' + typed.kept);
+  if (typed.auto !== '13.6') throw new Error('clearing did not restore the automatic figure: ' + typed.auto);
+  const storedPct = psql("select rows->0->>'pct' from audit_grids where grid_id='g_lowsample'");
+  if (storedPct !== '9.5') throw new Error('typed percentage not persisted: ' + storedPct);
+  const lowest = await mgr.evaluate(() => runDerive(itemDef('A2').item).issue);
+  if (!/9\.5%/.test(lowest)) throw new Error('analysis ignored the typed percentage: ' + lowest);
   const d = await mgr.evaluate(() => ({ a1: runDerive(itemDef('A1').item).suggest,
     a2: runDerive(itemDef('A2').item).suggest, a3: runDerive(itemDef('A3').item).suggest }));
   if (d.a1 !== 'NC' || d.a2 !== 'NC' || d.a3 !== 'NC') throw new Error('flags wrong: ' + JSON.stringify(d));
@@ -174,6 +191,36 @@ await step('two auditors on one sheet do not erase each other', async () => {
   const ids = JSON.parse(stored).map(r => r._id);
   if (ids.some(x => !x)) throw new Error('a row was stored without an id');
   if (new Set(ids).size !== ids.length) throw new Error('duplicate row ids: ' + ids.join(','));
+});
+await step('a stale screen cannot blank out rows someone else filled in', async () => {
+  /* Exactly what happened at Dar es Salaam: one person adds blank rows, a
+     second fills them in, and the first — still holding the empty copy and
+     never having received the change — types into it and saves. Both the
+     colleague's contents and the stale screen's own keystroke must survive. */
+  const gid = 'g_unsigned';
+  await mgr.evaluate(async g => {
+    clearInterval(pollTimer);                 // this screen hears nothing from now on
+    UI.open.A5 = true;
+    for (let i = 0; i < 3; i++) gridRows(g).push({ _id: rowId() });
+    saveGrid(g); render();
+    await new Promise(r => setTimeout(r, 1500));
+  }, gid);
+  await aud.evaluate(async g => {
+    await openAudit(S.auditId);
+    gridRows(g).forEach((r, i) => { r.code = 'FIL 0' + i; r.name = 'Filled by the auditor ' + i; });
+    saveGrid(g);
+    await new Promise(r => setTimeout(r, 1500));
+  }, gid);
+  /* A real keystroke on the stale screen, through the interface. */
+  await mgr.fill(`[data-g="${gid}"][data-r="0"][data-k="remark"]`, 'a stray keystroke');
+  await mgr.waitForTimeout(2000);
+  await mgr.evaluate(() => startPolling());
+  const stored = psql(`select rows from audit_grids where grid_id='${gid}'`);
+  const rows = JSON.parse(stored);
+  if (rows.length !== 3) throw new Error('row count changed: ' + rows.length);
+  const filled = rows.filter(r => (r.name || '').startsWith('Filled by the auditor'));
+  if (filled.length !== 3) throw new Error("the auditor's rows were blanked out: " + stored);
+  if (rows[0].remark !== 'a stray keystroke') throw new Error('the later keystroke was lost: ' + stored);
 });
 await step('auditor cannot open another campus', async () => {
   const r = await aud.evaluate(async () => {

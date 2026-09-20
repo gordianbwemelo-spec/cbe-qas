@@ -67,7 +67,10 @@ deriveNotModerated(rows) {
 
 /* ---- A2 : modules below the sample threshold ------------------------ */
 deriveSample(rows, S) {
-  const L = rowsWith(rows, ['code', 'name']).map(x => ({ ...x, p: pct(num(x.scripts), num(x.cand)) }))
+  /* Use the percentage as recorded on the sheet — typed or worked out — and
+     fall back to the counts when the cell is empty. */
+  const L = rowsWith(rows, ['code', 'name'])
+    .map(x => ({ ...x, p: has(x.pct) ? num(x.pct) : pct(num(x.scripts), num(x.cand)) }))
     .sort((a, b) => a.p - b.p);
   const n = L.length;
   const lowest = n ? L[0].p.toFixed(1) + '%' : '';

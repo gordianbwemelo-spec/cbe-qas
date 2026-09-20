@@ -67,6 +67,15 @@ async function canWrite(req, auditId) {
   return rows.length > 0 && rows[0].campus === u.campus;
 }
 const nextRev = 'nextval(\'rev_seq\')';
+/* Must match the client's rowHash exactly — it is the basis of the merge. */
+const rowHash = r => {
+  const o = {};
+  Object.keys(r || {}).sort().forEach(k => {
+    if (k === '_id' || k.slice(0, 3) === '_m_') return;
+    o[k] = r[k] == null ? '' : String(r[k]);
+  });
+  return JSON.stringify(o);
+};
 
 /* ------------------------------- auth ---------------------------------- */
 /* WHO MAY SIGN IN — the cards on the sign-in screen. */
@@ -120,7 +129,7 @@ function me(req) {
   return { role: u.role, roleLabel: ROLES[u.role].label, campus: u.campus || null,
     office: u.office || null, label: u.label, name: u.name, token: u.token };
 }
-app.get('/api/me', (req, res) => res.json({ me: me(req), year: YEAR, quarter: QUARTER }));
+app.get('/api/me', (req, res) => res.json({ me: me(req), year: YEAR, quarter: QUARTER, build: BUILD }));
 app.post('/api/logout', (req, res) => { req.session = null; res.json({ ok: true }); });
 
 /* ------------------------------ audits --------------------------------- */
@@ -284,19 +293,47 @@ app.post('/api/audit/:id/grid', wrap(async (req, res) => {
      work and is kept; a row the client did know about and no longer sends
      was deliberately deleted and goes. Rows both sides hold take the
      incoming version. */
-  const baseIds = Array.isArray(req.body.baseIds) ? req.body.baseIds : null;
+  const base = (req.body.base && typeof req.body.base === 'object' && !Array.isArray(req.body.base))
+    ? req.body.base : null;
+  const dirty = (req.body.dirty && typeof req.body.dirty === 'object' && !Array.isArray(req.body.dirty))
+    ? req.body.dirty : null;
   let out = gridRows, merged = false;
   const cur = await db.query(
     'SELECT rows FROM audit_grids WHERE audit_id=$1 AND grid_id=$2', [id, gridId]);
-  if (cur.rows.length && baseIds) {
+
+  if (cur.rows.length && base) {
     const stored = Array.isArray(cur.rows[0].rows) ? cur.rows[0].rows : [];
-    const identified = stored.every(r => r && r._id);      // pre-merge rows cannot be matched
-    if (identified) {
-      const base = new Set(baseIds);
-      const incoming = new Set(gridRows.map(r => r && r._id).filter(Boolean));
-      const theirs = stored.filter(r => !base.has(r._id) && !incoming.has(r._id));
-      if (theirs.length) { out = gridRows.concat(theirs); merged = true; }
+    const byId = new Map(stored.filter(r => r && r._id).map(r => [r._id, r]));
+    const seen = new Set();
+    const next = [];
+
+    for (const r of gridRows) {
+      const rid = r && r._id;
+      if (!rid) { next.push(r); continue; }
+      seen.add(rid);
+      const st = byId.get(rid);
+      const b = Object.prototype.hasOwnProperty.call(base, rid) ? base[rid] : undefined;
+      if (!st || b === undefined) { next.push(r); continue; }   // new here, or new to us
+      if (rowHash(st) === b) { next.push(r); continue; }   // nobody else touched it
+      /* The stored row has moved on since this screen last saw it. Lay only
+         the cells this screen actually changed over the stored row, so a
+         stale copy can neither flatten a colleague's work nor lose its own. */
+      if (rowHash(r) === b) { next.push(st); merged = true; continue; }
+      const changed = (dirty && dirty[rid]) || null;
+      if (!changed) { next.push(st); merged = true; continue; }
+      const combined = Object.assign({}, st);
+      Object.keys(changed).forEach(k => { combined[k] = r[k]; });
+      combined._id = rid;
+      next.push(combined); merged = true;
     }
+    /* Rows added by someone else that this screen never knew about. A row it
+       did know about and no longer sends was deliberately deleted. */
+    for (const st of stored) {
+      if (!st || !st._id || seen.has(st._id)) continue;
+      if (Object.prototype.hasOwnProperty.call(base, st._id)) continue;
+      next.push(st); merged = true;
+    }
+    out = next;
   }
 
   const { rows } = await db.query(
@@ -446,7 +483,7 @@ app.post('/api/presence', requireAuth, wrap(async (req, res) => {
   const { rows } = await db.query(
     `SELECT actor, role, screen FROM presence WHERE audit_id=$1 AND token<>$2 ORDER BY seen_at DESC LIMIT 12`,
     [req.body.auditId || null, u.token]);
-  res.json({ others: rows });
+  res.json({ others: rows, build: BUILD });
 }));
 
 /* -------------------------- access-code admin --------------------------- */
@@ -546,7 +583,8 @@ const BUILD = (() => {
   return h.digest('hex').slice(0, 10);
 })();
 const INDEX = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8')
-  .replace(/(href|src)="\/([a-z]+\.(?:js|css))"/g, `$1="/$2?v=${BUILD}"`);
+  .replace(/(href|src)="\/([a-z]+\.(?:js|css))"/g, `$1="/$2?v=${BUILD}"`)
+  .replace('</head>', `<script>window.APP_BUILD=${JSON.stringify(BUILD)}</script></head>`);
 
 /* Send anyone who lands on /index.html to / so they always get the stamped
    page rather than the raw file with unversioned asset URLs. */
