@@ -352,6 +352,7 @@ app.get('/api/my-issues', requireAuth, wrap(async (req, res) => {
     .map(r => ({
       auditId: r.id, campus: r.campus, itemId: r.item_id,
       ref: r.data.reportRef || r.item_id, area: r.data.area, issue: r.data.issue,
+      implication: r.data.implication || '',
       rec: r.data.rec, responsible: r.data.responsible, severity: r.data.severity,
       target: r.data.target, issuedAt: r.issued_at,
       response: respMap[r.id + '|' + (r.data.reportRef || r.item_id)] || null
@@ -524,6 +525,9 @@ const BUILD = (() => {
 const INDEX = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8')
   .replace(/(href|src)="\/([a-z]+\.(?:js|css))"/g, `$1="/$2?v=${BUILD}"`);
 
+/* Send anyone who lands on /index.html to / so they always get the stamped
+   page rather than the raw file with unversioned asset URLs. */
+app.get('/index.html', (req, res) => res.redirect(302, '/'));
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: '30d', etag: true, index: false }));
 app.get('/healthz', (req, res) => res.type('text').send('ok'));
 app.use((req, res) => {

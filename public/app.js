@@ -579,6 +579,10 @@ function itemHtml(a, it, n) {
         <button class="btn sm gold" data-act="useDraft" data-i="${it.id}">Insert draft</button></div>`;
     h += fieldHtml({ label: 'Audit area (short heading used in the report)', type: 'text' }, r.area || it.title, `items.${it.id}.area`, ro);
     h += fieldHtml({ label: 'Issue observed — state the facts and their magnitude', type: 'textarea' }, r.issue, `items.${it.id}.issue`, ro);
+    h += fieldHtml({ label: 'Implication — what it means for the College if it is not addressed',
+      type: 'textarea', help: 'A standing implication is drafted from the standard. Edit it if this campus\u2019s circumstances differ.' },
+      r.implication != null && r.implication !== '' ? r.implication : (it.implication || ''),
+      `items.${it.id}.implication`, ro);
     ((it.probes || []).filter(p => p.showIf === 'issue')).forEach(p =>
       h += fieldHtml(p, r.probes[p.k], `items.${it.id}.probes.${p.k}`, ro));
     h += fieldHtml({ label: 'Root cause established', type: 'select',
@@ -607,6 +611,22 @@ function itemHtml(a, it, n) {
 }
 
 /* -------------------------------- grids ---------------------------------- */
+const calcVal = (c, row) => { try { const v = c.calc(row, S.standards); return v == null ? '' : v; } catch (e) { return ''; } };
+const calcWarn = (c, row) => { try { return !!(c.warn && c.warn(row, S.standards)); } catch (e) { return false; } };
+
+/* Redraw just the calculated cells of one row, so the figure keeps up with
+   the typing without rebuilding the screen and stealing the cursor. */
+function refreshCalcCells(gid, i) {
+  const g = findGrid(gid); if (!g) return;
+  const row = gridRows(gid)[i] || {};
+  g.cols.filter(c => c.type === 'calc').forEach(c => {
+    const cell = document.querySelector(`[data-calc="${gid}"][data-r="${i}"][data-k="${c.k}"]`);
+    if (!cell) return;
+    cell.textContent = calcVal(c, row);
+    cell.classList.toggle('bad', calcWarn(c, row));
+  });
+}
+
 function gridHtml(g, ro) {
   const rows = gridRows(g.id);
   let h = `<div class="field" style="margin-top:14px"><label>${esc(g.title)} — evidence sheet</label>
@@ -619,6 +639,11 @@ function gridHtml(g, ro) {
   rows.forEach((row, i) => {
     h += `<tr><td style="text-align:center;color:#8b95a5;font-size:11px">${i + 1}</td>` + g.cols.map(c => {
       const v = row[c.k] == null ? '' : row[c.k];
+      /* A calculated column is worked out from the row as it is typed — the
+         auditor sees the figure the standard is judged on, and there is
+         nothing to key in or get wrong. */
+      if (c.type === 'calc') return `<td class="calcell${calcWarn(c, row) ? ' bad' : ''}"
+        data-calc="${g.id}" data-r="${i}" data-k="${c.k}">${esc(calcVal(c, row))}</td>`;
       if (c.type === 'select') return `<td><select data-g="${g.id}" data-r="${i}" data-k="${c.k}" ${ro ? 'disabled' : ''}><option value=""></option>` +
         c.options.map(o => `<option ${v === o ? 'selected' : ''}>${esc(o)}</option>`).join('') + '</select></td>';
       return `<td><input type="${c.type === 'number' ? 'number' : 'text'}" step="any" data-g="${g.id}" data-r="${i}" data-k="${c.k}" value="${esc(v)}" ${ro ? 'disabled' : ''}></td>`;
@@ -803,6 +828,7 @@ function bindDynamic() {
       if (!rows[i]) rows[i] = {};
       rows[i][el.dataset.k] = el.type === 'number' ? (el.value === '' ? '' : parseFloat(el.value)) : el.value;
       saveGrid(el.dataset.g);
+      refreshCalcCells(el.dataset.g, i);
     };
     if (el.tagName === 'SELECT') el.onchange = () => { h(); softRefresh(el); };
     else { el.oninput = h; el.onchange = () => { h(); softRefresh(el); }; }
@@ -942,9 +968,12 @@ function ingestRows(gid, rows) {
   let n = 0;
   rows.forEach(cells => {
     if (!cells.some(c => c !== '')) return;
-    if (cells[0] && g.cols[0] && String(cells[0]).toLowerCase() === g.cols[0].label.toLowerCase()) return;
+    const keyed = g.cols.filter(c => c.type !== 'calc');
+    if (cells[0] && keyed[0] && String(cells[0]).toLowerCase() === keyed[0].label.toLowerCase()) return;
     const r = {};
-    g.cols.forEach((c, i) => {
+    /* Calculated columns are never keyed in, so they take no place in a
+       pasted or imported sheet. */
+    g.cols.filter(c => c.type !== 'calc').forEach((c, i) => {
       let v = cells[i] == null ? '' : String(cells[i]).trim();
       if (c.type === 'number') { const f = parseFloat(v.replace(/[, ]/g, '')); v = isNaN(f) ? '' : f; }
       if (c.type === 'select' && v) {
@@ -963,9 +992,9 @@ function findGrid(gid) {
   return null;
 }
 function downloadTemplate(gid) {
-  const g = findGrid(gid);
-  saveText('﻿' + g.cols.map(c => `"${c.label}"`).join(',') + '\n'
-    + g.cols.map(c => `"${c.type === 'select' ? c.options.join(' | ') : c.type}"`).join(',') + '\n',
+  const g = findGrid(gid), cols = g.cols.filter(c => c.type !== 'calc');
+  saveText('﻿' + cols.map(c => `"${c.label}"`).join(',') + '\n'
+    + cols.map(c => `"${c.type === 'select' ? c.options.join(' | ') : c.type}"`).join(',') + '\n',
     `TEMPLATE_${gid}.csv`, 'text/csv');
   toast('Blank sheet downloaded — fill it in Excel, then use Import CSV.');
 }
@@ -977,7 +1006,8 @@ function importCsv(gid) {
     const rd = new FileReader();
     rd.onload = () => {
       const rows = parseDelimited(String(rd.result).replace(/^﻿/, ''));
-      if (rows.length && rows[0].join('').toLowerCase().includes(findGrid(gid).cols[0].label.toLowerCase().slice(0, 6))) rows.shift();
+      const first = findGrid(gid).cols.filter(c => c.type !== 'calc')[0];
+      if (rows.length && first && rows[0].join('').toLowerCase().includes(first.label.toLowerCase().slice(0, 6))) rows.shift();
       const filtered = rows.filter(r => !r.every(c => /\|/.test(c) || /^(text|number|select|date)$/i.test(c)));
       const n = ingestRows(gid, filtered);
       saveGrid(gid); render(); toast(`${n} row(s) imported.`);

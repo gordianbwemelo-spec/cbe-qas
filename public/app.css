@@ -129,6 +129,10 @@ table.dg td input,table.dg td select{border:0;border-radius:0;padding:6px 8px;ba
 table.dg td input:focus,table.dg td select:focus{outline:2px solid #a9c3ec;outline-offset:-2px;background:#fff}
 table.dg tr.bad td{background:#fdf4f6}
 table.dg td.rm{width:30px;text-align:center}
+/* Worked out by the system from the row — not typed, so it reads as a result. */
+table.dg td.calcell{padding:6px 8px;background:#f4f6fa;color:#3b4657;font-weight:600;
+  text-align:right;font-variant-numeric:tabular-nums}
+table.dg td.calcell.bad{background:#fdeef1;color:#a3223a}
 .xbtn{border:0;background:transparent;color:#b3bcca;cursor:pointer;font-size:15px;line-height:1;padding:4px 6px}
 .xbtn:hover{color:var(--bad)}
 

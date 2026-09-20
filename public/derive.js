@@ -77,7 +77,7 @@ deriveSample(rows, S) {
     issue: `The moderation sample size for ${nw(n)} ${s(n, 'module was', 'modules was')} below the required ${S.sampleSizePct}% threshold, the lowest being ${lowest}. Affected modules: ${listOf(L.map(x => x.name || x.code))}.`,
     rec: `Ensure moderators are allocated time proportional to module volume so that the ${S.sampleSizePct}% sample threshold is met, and require the sample size to be recorded on every moderation report.`,
     title: `Modules moderated below the ${S.sampleSizePct}% sample threshold`,
-    cols: ['Module code', 'Module name', 'Candidates', 'Scripts moderated', 'Sample %', 'Moderator'],
+    cols: ['Module code', 'Module name', 'Scripts sat', 'Scripts moderated', '% moderated', 'Moderator'],
     row: x => [x.code, x.name, x.cand, x.scripts, x.p.toFixed(1) + '%', x.modname]
   });
 },

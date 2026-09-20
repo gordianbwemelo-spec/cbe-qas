@@ -36,7 +36,8 @@ function buildReport(state) {
           const d = runDerive(it);
           const affected = (r.affected || '').trim()
             || ((d.affected && d.affected.length) ? d.affected.join('\n') : '');
-          iss.push({ itemId: it.id, area: r.area || it.title, issue: r.issue || '', rec: r.rec || '',
+          iss.push({ itemId: it.id, area: r.area || it.title, issue: r.issue || '',
+            implication: (r.implication || '').trim() || it.implication || '', rec: r.rec || '',
             responsible: respName(r, it), severity: r.severity || '', target: r.target || '',
             rootCause: r.rootCause || '', status: r.status, evidence: r.evidence || '',
             quant: (r.quant || '').trim() || d.quant || '', affected });
@@ -228,16 +229,18 @@ function reportHtml(R) {
   else {
     h += `<p>The issues observed are presented in the table that follows. Management Responses are recorded by the
     responsible offices in the Quality Audit System and appear here as they are received.</p>
-    <table><thead><tr><th style="width:6%">#</th><th style="width:15%">Audit Area</th><th style="width:27%">Issue Observed</th>
-      <th style="width:24%">Recommendation</th><th style="width:12%">Responsible Officer</th><th style="width:16%">Management Response</th></tr></thead><tbody>`;
+    <table><thead><tr><th style="width:5%">#</th><th style="width:13%">Audit Area</th><th style="width:23%">Issue Observed</th>
+      <th style="width:16%">Implication</th>
+      <th style="width:20%">Recommendation</th><th style="width:10%">Responsible Officer</th><th style="width:13%">Management Response</th></tr></thead><tbody>`;
     R.issues.forEach(g => {
-      h += `<tr><td colspan="6" style="background:#f0f3f8"><b>${g.ref} ${esc(g.title)}</b></td></tr>`;
+      h += `<tr><td colspan="7" style="background:#f0f3f8"><b>${g.ref} ${esc(g.title)}</b></td></tr>`;
       g.rows.forEach(r => {
         const rp = resp(r.ref);
         h += `<tr><td><b>${r.ref}</b></td><td>${esc(r.area)}</td>
           <td>${nl2br(r.issue)}
             ${r.quant ? `<div style="margin-top:6px"><b>Extent:</b> ${nl2br(r.quant)}</div>` : ''}
             ${r.affected ? `<div style="margin-top:6px"><b>Affected:</b><br>${affectedHtml(r.affected)}</div>` : ''}</td>
+          <td>${nl2br(r.implication)}</td>
           <td>${nl2br(r.rec)}</td>
           <td>${esc(r.responsible)}</td><td class="blank">${rp.response ? nl2br(rp.response) +
             `<div style="font-size:10px;color:#555;margin-top:4px">${esc(rp.status || '')}${rp.by ? ' — ' + esc(rp.by) : ''}${rp.date ? ', ' + esc(fmtDate(rp.date)) : ''}</div>` : ''}</td></tr>`;
@@ -363,10 +366,14 @@ async function issueReport() {
   if (!R.allIssues.length && !confirm('No issues have been raised. Issue the report anyway?')) return;
   const miss = validate();
   if (miss.length && !confirm(`${miss.length} entry/entries are still incomplete. Issue the report anyway?`)) return;
+  /* Stamp the reference, and fix the drafted implication onto the record, so
+     the responsible office sees exactly what the report says. */
   for (const [itemId, ref] of Object.entries(R.refMap)) {
-    if (S.items[itemId].reportRef !== ref) {
-      S.items[itemId].reportRef = ref;
-      await API.post(`/api/audit/${S.auditId}/item`, { itemId, data: S.items[itemId] });
+    const rc = S.items[itemId], def = (itemDef(itemId) || {}).item || {};
+    const impl = (rc.implication || '').trim() || def.implication || '';
+    if (rc.reportRef !== ref || (rc.implication || '') !== impl) {
+      rc.reportRef = ref; rc.implication = impl;
+      await API.post(`/api/audit/${S.auditId}/item`, { itemId, data: rc });
     }
   }
   await API.post(`/api/audit/${S.auditId}/issue`, { locked: true });
@@ -432,9 +439,9 @@ function exportDocx(R) {
   if (!R.issues.length) P('No issue was raised in this audit cycle.', {});
   else {
     P('The issues observed are presented in the table that follows. Management Responses are recorded by the responsible offices in the Quality Audit System and appear here as they are received.', { align: 'both' });
-    const rows = [['#', 'Audit Area', 'Issue Observed', 'Recommendation', 'Responsible Officer', 'Management Response']];
+    const rows = [['#', 'Audit Area', 'Issue Observed', 'Implication', 'Recommendation', 'Responsible Officer', 'Management Response']];
     R.issues.forEach(g => {
-      rows.push([{ text: `${g.ref} ${g.title}`, b: true, span: 6, fill: 'EDF0F5' }]);
+      rows.push([{ text: `${g.ref} ${g.title}`, b: true, span: 7, fill: 'EDF0F5' }]);
       g.rows.forEach(r => {
         const rp = resp(r.ref);
         const cell = [r.issue];
@@ -443,11 +450,11 @@ function exportDocx(R) {
           cell.push('Affected:');
           affectedLines(r.affected).forEach((x, i) => cell.push(`${i + 1}. ${x}`));
         }
-        rows.push([{ text: r.ref, b: true }, r.area, cell, r.rec, r.responsible,
+        rows.push([{ text: r.ref, b: true }, r.area, cell, r.implication, r.rec, r.responsible,
           rp.response ? `${rp.response}\n${[rp.status, rp.by, rp.date ? fmtDate(rp.date) : ''].filter(Boolean).join(' — ')}` : '']);
       });
     });
-    b += wTable(rows, [640, 1250, 2950, 1950, 1180, 1390], { total: W, size: 8 });
+    b += wTable(rows, [560, 1120, 2500, 1750, 1750, 1060, 1220], { total: W, size: 8 });
   }
 
   H('5.0 Implementation of the Fourth Quarter Audit Recommendations');
@@ -520,9 +527,9 @@ function exportMemos(R) {
     P(`The Quality Assurance Unit conducted the academic quality audit at ${c.name} Campus from ${dateRange()}. ${rows.length} issue(s) arising from that audit fall within your office's responsibility and are tabulated below.`, { align: 'both' });
     P(`You are requested to record your response in the Quality Audit System within twenty-one (21) days of the date of this memorandum. Sign in at the College's Quality Audit System using the access code issued to your office; the issues below will be waiting for you, and your response is saved the moment you submit it.`, { align: 'both' });
     P('');
-    b += wTable([['#', 'Audit Area', 'Issue Observed', 'Recommendation', 'Target Date']]
-      .concat(rows.map(r => [r.ref, r.area, r.issue, r.rec, r.target ? fmtDate(r.target) : ''])),
-      [640, 1500, 3100, 2900, 1180], { total: 9320, size: 8 });
+    b += wTable([['#', 'Audit Area', 'Issue Observed', 'Implication', 'Recommendation', 'Target Date']]
+      .concat(rows.map(r => [r.ref, r.area, r.issue, r.implication, r.rec, r.target ? fmtDate(r.target) : ''])),
+      [560, 1240, 2360, 2000, 2100, 1060], { total: 9320, size: 8 });
     P(''); P('Sincerely,'); P(''); P('');
     P(S.session.leadAuditor || 'Gordian Bwemelo', { b: true });
     P('Quality Assurance Manager');
@@ -536,13 +543,13 @@ function exportMemos(R) {
 function exportXlsx(R) {
   const c = R.campus;
   const issues = [['#', 'Campus', 'Audit Aspect', 'Audit Area', 'Issue Observed', 'Extent (quantified)',
-    'Affected Items', 'Recommendation', 'Responsible Officer', 'Severity', 'Root Cause', 'Target Date', 'Status',
+    'Affected Items', 'Implication', 'Recommendation', 'Responsible Officer', 'Severity', 'Root Cause', 'Target Date', 'Status',
     'Management Response', 'Response Status', 'Responded By', 'Date Responded']];
   R.issues.forEach(g => g.rows.forEach(r => {
     const rp = S.responses[r.ref] || {};
     issues.push([r.ref, c.name, g.title, r.area, r.issue, r.quant,
       affectedLines(r.affected).map((x, i) => `${i + 1}. ${x}`).join('\n'),
-      r.rec, r.responsible, r.severity, r.rootCause,
+      r.implication, r.rec, r.responsible, r.severity, r.rootCause,
       r.target ? fmtDate(r.target) : '', r.status === 'NC' ? 'Non-compliant' : 'Partially compliant',
       rp.response || '', rp.status || 'Awaiting response', rp.by || '', rp.date ? fmtDate(rp.date) : '']);
   }));
@@ -564,7 +571,7 @@ function exportXlsx(R) {
     ['— not implemented', R.stats.fuNot]];
   const sheets = [
     { name: 'Summary', rows: summary, widths: [42, 60] },
-    { name: 'Issues Tracker', rows: issues, freeze: 1, widths: [8, 12, 26, 24, 55, 30, 40, 50, 22, 14, 20, 14, 16, 45, 18, 18, 14] },
+    { name: 'Issues Tracker', rows: issues, freeze: 1, widths: [8, 12, 26, 24, 55, 30, 40, 50, 50, 22, 14, 20, 14, 16, 45, 18, 18, 14] },
     { name: 'Strengths', rows: comp, freeze: 1, widths: [8, 24, 34, 60, 30] },
     { name: 'Q4 Follow-up', rows: fu, freeze: 1, widths: [8, 10, 24, 55, 22, 20, 40, 34, 15, 22, 34] }
   ];
@@ -610,6 +617,7 @@ function viewMyResponses() {
       <div class="muted" style="margin-bottom:8px">${esc(i.campus)} Campus${i.severity ? ' · ' + esc(i.severity) : ''}</div>
       <table class="plain" style="margin-bottom:12px"><tbody>
         <tr><th style="width:170px">Issue observed</th><td>${nl2br(i.issue)}</td></tr>
+        ${i.implication ? `<tr><th>Implication</th><td>${nl2br(i.implication)}</td></tr>` : ''}
         <tr><th>Recommendation</th><td>${nl2br(i.rec)}</td></tr>
         ${i.target ? `<tr><th>Target date</th><td>${esc(fmtDate(i.target))}</td></tr>` : ''}
       </tbody></table>
@@ -734,11 +742,11 @@ function viewConsolidate() {
     </tbody></table></div>`;
 }
 function consolidateXlsx() {
-  const issues = [['#', 'Campus', 'Audit Aspect', 'Audit Area', 'Issue Observed', 'Recommendation',
+  const issues = [['#', 'Campus', 'Audit Aspect', 'Audit Area', 'Issue Observed', 'Implication', 'Recommendation',
     'Responsible Officer', 'Severity', 'Target Date', 'Management Response', 'Response Status']];
   CONSOL.forEach(x => x.R.issues.forEach(g => g.rows.forEach(r => {
     const rp = x.state.responses[r.ref] || {};
-    issues.push([r.ref, x.R.campus.name, g.title, r.area, r.issue, r.rec, r.responsible, r.severity,
+    issues.push([r.ref, x.R.campus.name, g.title, r.area, r.issue, r.implication, r.rec, r.responsible, r.severity,
       r.target ? fmtDate(r.target) : '', rp.response || '', rp.status || 'Awaiting response']);
   })));
   const cmp = [['Metric'].concat(CONSOL.map(x => x.R.campus.name))];

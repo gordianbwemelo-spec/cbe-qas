@@ -23,7 +23,8 @@ const OFF_DAC = 'off:Director of Academics (DAC)';
 const VIEWER = 'view';
 console.log('codes:', { MANAGER, AUD_DODOMA, OFF_DASS, OFF_DAC, VIEWER });
 
-const b = await chromium.launch();
+/* CHROMIUM_PATH lets the suite run against a browser already on the machine. */
+const b = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 const mk = async () => {
   const ctx = await b.newContext({ acceptDownloads: true, viewport: { width: 1440, height: 1000 } });
   const p = await ctx.newPage();
@@ -101,6 +102,12 @@ await step('evidence sheet saves and auto-flags', async () => {
   await mgr.waitForTimeout(1200);
   const n = Number(psql("select jsonb_array_length(rows) from audit_grids where grid_id='g_lowsample'"));
   if (n !== 2) throw new Error('grid not persisted: ' + n);
+  const pctCells = await mgr.evaluate(() => {
+    const g = findGrid('g_lowsample'), rows = gridRows('g_lowsample');
+    const col = g.cols.find(c => c.type === 'calc');
+    return rows.map(r => col.calc(r, S.standards));
+  });
+  if (pctCells.join(',') !== '12.2%,13.6%') throw new Error('% moderated wrong: ' + pctCells.join(','));
   const d = await mgr.evaluate(() => ({ a1: runDerive(itemDef('A1').item).suggest,
     a2: runDerive(itemDef('A2').item).suggest, a3: runDerive(itemDef('A3').item).suggest }));
   if (d.a1 !== 'NC' || d.a2 !== 'NC' || d.a3 !== 'NC') throw new Error('flags wrong: ' + JSON.stringify(d));
@@ -237,6 +244,13 @@ await step('manager issues the report', async () => {
   if (refs < 6) throw new Error('report references not written: ' + refs);
 });
 const off = await mk();
+await step('every issue carries an implication', async () => {
+  const bad = await mgr.evaluate(() => buildReport().allIssues
+    .filter(i => !(i.implication || '').trim()).map(i => i.ref));
+  if (bad.length) throw new Error('issues without an implication: ' + bad.join(', '));
+  const stored = psql("select count(*) from audit_items where data->>'implication' is not null and data->>'implication' <> ''");
+  if (Number(stored) < 5) throw new Error('implications not persisted on issue: ' + stored);
+});
 await step('office signs in and sees only its own issues', async () => {
   await login(off, 'Mr. E. Kimambo', OFF_DASS);
   await off.waitForTimeout(1800);
