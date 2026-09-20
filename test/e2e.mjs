@@ -151,6 +151,30 @@ await step("auditor's entry reaches the manager's screen without a reload", asyn
   const seen = await mgr.evaluate(() => (S.items.A9 || {}).status);
   if (seen !== 'C') throw new Error('manager did not receive the change: ' + seen);
 });
+await step('two auditors on one sheet do not erase each other', async () => {
+  /* The manager has rows in g_notmod. The auditor has never seen them, holds
+     the cursor in that sheet, and saves a row of their own. Before the fix
+     the manager's rows were wiped; both must now survive. */
+  await aud.evaluate(async () => {
+    await openAudit(S.auditId);                       // fresh screen, sees current rows
+    ingestRows('g_notmod', [['QQQ 00001', 'Auditor Row', '7', 'BPS', 'Procurement', '10', '', '']]);
+    saveGrid('g_notmod');
+    await new Promise(r => setTimeout(r, 1500));
+  });
+  await mgr.evaluate(async () => {
+    ingestRows('g_notmod', [['ZZZ 00002', 'Manager Row', '8', 'BAF', 'Finance', '20', '', '']]);
+    saveGrid('g_notmod');
+    await new Promise(r => setTimeout(r, 1500));
+  });
+  await aud.waitForTimeout(9000);
+  const stored = psql("select rows from audit_grids where grid_id='g_notmod'");
+  for (const want of ['Procurement Principles', 'Auditor Row', 'Manager Row']) {
+    if (!stored.includes(want)) throw new Error('row lost from the sheet: ' + want);
+  }
+  const ids = JSON.parse(stored).map(r => r._id);
+  if (ids.some(x => !x)) throw new Error('a row was stored without an id');
+  if (new Set(ids).size !== ids.length) throw new Error('duplicate row ids: ' + ids.join(','));
+});
 await step('auditor cannot open another campus', async () => {
   const r = await aud.evaluate(async () => {
     try { await API.post('/api/audits', { campus: 'Mbeya' }); return 'allowed'; }

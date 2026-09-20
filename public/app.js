@@ -64,7 +64,11 @@ async function flushSaves() {
   const jobs = Array.from(pending.values());
   pending.clear();
   try {
-    for (const j of jobs) { const r = await j(); if (r && r.rev) REV = Math.max(REV, r.rev); }
+    /* Deliberately NOT advancing REV from a write. The revision a write
+       returns is ahead of anything this screen has fetched, so adopting it
+       would skip over other people's changes in between. The next poll
+       collects our own write again, which is harmless. */
+    for (const j of jobs) await j();
     setSaveState('saved');
   } catch (e) {
     setSaveState('error', e.message);
@@ -84,8 +88,27 @@ const saveSession  = () => queueSave('session', () => API.post(`/api/audit/${S.a
   { session: S.session, general: S.general, standards: S.standards, wayForward: S.wayForward }));
 const saveItem     = id => queueSave('item:' + id, () => API.post(`/api/audit/${S.auditId}/item`,
   { itemId: id, data: S.items[id] }));
-const saveGrid     = gid => queueSave('grid:' + gid, () => API.post(`/api/audit/${S.auditId}/grid`,
-  { gridId: gid, rows: S.grids[gid] || [] }));
+/* Every row carries a stable id, and each save declares which rows this
+   screen started from. The server can then tell a row someone else added
+   from a row this auditor deleted, and merge instead of overwriting. */
+const rowId = () => 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const GRID_BASE = {};
+function setGridBase(gid) {
+  GRID_BASE[gid] = (S.grids[gid] || []).map(r => r && r._id).filter(Boolean);
+}
+const saveGrid = gid => queueSave('grid:' + gid, async () => {
+  const rows = S.grids[gid] || [];
+  rows.forEach(r => { if (r && !r._id) r._id = rowId(); });
+  const base = GRID_BASE[gid] || rows.map(r => r._id);
+  const d = await API.post(`/api/audit/${S.auditId}/grid`, { gridId: gid, rows, baseIds: base });
+  if (d && d.merged && Array.isArray(d.rows)) {
+    S.grids[gid] = d.rows;
+    const f = document.activeElement;
+    if (!(f && f.dataset && f.dataset.g === gid)) render();
+  }
+  setGridBase(gid);
+  return d;
+});
 const saveFollowUp = rid => queueSave('fu:' + rid, () => API.post(`/api/audit/${S.auditId}/followup`,
   { recId: rid, data: S.followUp[rid] }));
 
@@ -98,19 +121,23 @@ function startPolling() {
     try {
       const d = await API.get(`/api/audit/${S.auditId}/since?rev=${REV}`);
       if (!d || d.rev === REV) { pingPresence(); return; }
-      let changed = false;
+      let changed = false, held = false;
       const focus = document.activeElement;
       const focusKey = focus && focus.dataset ? (focus.dataset.s || focus.dataset.g || '') : '';
+      /* A change we decline to apply — because the person is typing in that
+         very field — must NOT be counted as seen. If the cursor moved past it
+         the change would never be delivered again, and the next save would
+         quietly overwrite it with this screen's stale copy. */
       Object.entries(d.items || {}).forEach(([k, v]) => {
-        if (focusKey.includes(`items.${k}.`)) return;            // don't yank what someone is typing
+        if (focusKey.includes(`items.${k}.`)) { held = true; return; }
         S.items[k] = v; changed = true;
       });
       Object.entries(d.grids || {}).forEach(([k, v]) => {
-        if (focus && focus.dataset && focus.dataset.g === k) return;
-        S.grids[k] = v; changed = true;
+        if (focus && focus.dataset && focus.dataset.g === k) { held = true; return; }
+        S.grids[k] = v; setGridBase(k); changed = true;
       });
       Object.entries(d.followUp || {}).forEach(([k, v]) => {
-        if (focusKey.includes(`followUp.${k}.`)) return;
+        if (focusKey.includes(`followUp.${k}.`)) { held = true; return; }
         S.followUp[k] = v; changed = true;
       });
       Object.entries(d.responses || {}).forEach(([k, v]) => { S.responses[k] = v; changed = true; });
@@ -122,7 +149,7 @@ function startPolling() {
         S.locked = !!d.audit.locked;
         changed = true;
       }
-      REV = d.rev;
+      if (!held) REV = d.rev;          // hold the cursor until everything lands
       if (changed && !pending.size) { render(); }
       pingPresence();
     } catch (e) { /* offline for a moment; keep going */ }
@@ -280,6 +307,7 @@ async function openAudit(id) {
   S.wayForward = Array.isArray(d.audit.wayForward) ? d.audit.wayForward : [];
   S.locked = !!d.audit.locked; S.issuedAt = d.audit.issuedAt;
   S.items = d.items || {}; S.grids = d.grids || {};
+  Object.keys(S.grids).forEach(setGridBase);
   S.followUp = d.followUp || {}; S.responses = d.responses || {};
   PRIOR_RECS = d.priorRecs || [];
   REV = d.rev || 0;
@@ -911,8 +939,8 @@ async function actions(act, el) {
         S.followUp[id].status = S.followUp[id].status === el.dataset.v ? '' : el.dataset.v;
         saveFollowUp(id); UI.open['fu_' + id] = true; render(); return;
       }
-      case 'addRow':   gridRows(el.dataset.g).push({}); saveGrid(el.dataset.g); render(); return;
-      case 'addRow10': for (let i = 0; i < 10; i++) gridRows(el.dataset.g).push({}); saveGrid(el.dataset.g); render(); return;
+      case 'addRow':   gridRows(el.dataset.g).push({ _id: rowId() }); saveGrid(el.dataset.g); render(); return;
+      case 'addRow10': for (let i = 0; i < 10; i++) gridRows(el.dataset.g).push({ _id: rowId() }); saveGrid(el.dataset.g); render(); return;
       case 'delRow':   gridRows(el.dataset.g).splice(+el.dataset.r, 1); saveGrid(el.dataset.g); render(); return;
       case 'pasteGrid': openPaste(el.dataset.g); return;
       case 'tmplGrid':  downloadTemplate(el.dataset.g); return;
@@ -970,7 +998,7 @@ function ingestRows(gid, rows) {
     if (!cells.some(c => c !== '')) return;
     const keyed = g.cols.filter(c => c.type !== 'calc');
     if (cells[0] && keyed[0] && String(cells[0]).toLowerCase() === keyed[0].label.toLowerCase()) return;
-    const r = {};
+    const r = { _id: rowId() };
     /* Calculated columns are never keyed in, so they take no place in a
        pasted or imported sheet. */
     g.cols.filter(c => c.type !== 'calc').forEach((c, i) => {

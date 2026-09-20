@@ -276,11 +276,34 @@ app.post('/api/audit/:id/grid', wrap(async (req, res) => {
   if (!gridId) return res.status(400).json({ error: 'gridId required' });
   if (!Array.isArray(gridRows)) return res.status(400).json({ error: 'rows must be an array' });
   if (gridRows.length > 5000) return res.status(413).json({ error: 'That sheet is too large (limit 5000 rows).' });
+
+  /* Merge rather than overwrite. A sheet is saved whole, so without this a
+     screen that had not yet seen someone else's rows would erase them. Each
+     row carries a stable _id, and the client declares the ids it started
+     from: a stored row the client never knew about is somebody else's new
+     work and is kept; a row the client did know about and no longer sends
+     was deliberately deleted and goes. Rows both sides hold take the
+     incoming version. */
+  const baseIds = Array.isArray(req.body.baseIds) ? req.body.baseIds : null;
+  let out = gridRows, merged = false;
+  const cur = await db.query(
+    'SELECT rows FROM audit_grids WHERE audit_id=$1 AND grid_id=$2', [id, gridId]);
+  if (cur.rows.length && baseIds) {
+    const stored = Array.isArray(cur.rows[0].rows) ? cur.rows[0].rows : [];
+    const identified = stored.every(r => r && r._id);      // pre-merge rows cannot be matched
+    if (identified) {
+      const base = new Set(baseIds);
+      const incoming = new Set(gridRows.map(r => r && r._id).filter(Boolean));
+      const theirs = stored.filter(r => !base.has(r._id) && !incoming.has(r._id));
+      if (theirs.length) { out = gridRows.concat(theirs); merged = true; }
+    }
+  }
+
   const { rows } = await db.query(
     `INSERT INTO audit_grids (audit_id, grid_id, rows, updated_by) VALUES ($1,$2,$3,$4)
      ON CONFLICT (audit_id, grid_id) DO UPDATE SET rows=$3, updated_by=$4, rev=${nextRev}, updated_at=now()
-     RETURNING rev`, [id, gridId, JSON.stringify(gridRows), who(req).name]);
-  res.json({ ok: true, rev: Number(rows[0].rev) });
+     RETURNING rev`, [id, gridId, JSON.stringify(out), who(req).name]);
+  res.json({ ok: true, rev: Number(rows[0].rev), merged, rows: merged ? out : undefined });
 }));
 
 app.post('/api/audit/:id/followup', wrap(async (req, res) => {
